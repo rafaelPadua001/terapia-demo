@@ -121,3 +121,9 @@ Thumbs.db
 # Local databases / runtime artifacts
 *.sqlite3
 *.db
+
+# Documentation that must stay versioned
+!README
+!README.md
+!docs/
+!docs/MANUAL_USUARIO.md
