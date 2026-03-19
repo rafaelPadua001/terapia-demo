@@ -1,0 +1,39 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Newsreader:wght@400;600;700&display=swap');
+
+:root {
+  --font-sans: "Manrope", "Segoe UI", sans-serif;
+  --font-serif: "Newsreader", "Georgia", serif;
+  --bg: #f5f3ee;
+  --ink: #1f2a27;
+  --muted: #5e7c78;
+  --card: #ffffff;
+  --line: rgba(27, 94, 91, 0.15);
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: radial-gradient(circle at top left, #f0ede6 0%, #f7f5f1 55%, #eef3f1 100%);
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.surface-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(27, 94, 91, 0.08);
+}
+
+.section-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
