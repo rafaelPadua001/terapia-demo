@@ -1,17 +1,17 @@
 ﻿<template>
   <MainLayout>
     <v-card title="Evoluções">
-      <v-card-text>
-        <PatientAutocomplete v-model="patientId" />
-        <v-textarea v-model="description" label="Descrição" />
-        <v-btn color="success" :loading="loadingAction" @click="create">
+      <v-card-text >
+        <PatientAutocomplete v-model="patientId" v-if="!isRestrictedUser"/>
+        <v-textarea v-model="description" label="Descrição" v-if="!isRestrictedUser"/>
+        <v-btn color="success" :loading="loadingAction" @click="create" v-if="!isRestrictedUser">
           <v-icon>
             <span class="material-symbols-outlined">save</span>
           </v-icon>
           Salvar
         </v-btn>
         <v-divider class="my-4" />
-        <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
+        <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" v-if="!isRestrictedUser"/>
         <v-data-table-server
           :headers="headers"
           :items="items"
@@ -54,14 +54,18 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
+
 import MainLayout from "../layouts/MainLayout.vue";
 import PatientAutocomplete from "../components/PatientAutocomplete.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
 import api from "../services/api";
 import { useUiStore } from "../store/ui";
+import { useAuthStore } from "../store/auth";
 import { fixEncoding } from "../utils/encoding";
+import { isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
 
+const auth = useAuthStore();
 const ui = useUiStore();
 const items = ref([]);
 const total = ref(0);
@@ -75,6 +79,7 @@ const confirmDelete = ref(false);
 const deleteTarget = ref(null);
 const deletingId = ref(null);
 const showDeleted = ref(false);
+const isRestrictedUser = computed(() => isRestrictedUserRole(auth));
 
 const headers = [
   { title: "Paciente", key: "patient" },

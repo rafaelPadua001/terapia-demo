@@ -1,5 +1,6 @@
 ﻿<template>
   <v-autocomplete
+    
     v-model="selected"
     v-model:search="search"
     :items="items"
@@ -23,6 +24,7 @@
 <script setup>
 import { ref, watch, computed } from "vue";
 import api from "../services/api";
+import { isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
 
 const props = defineProps({
   modelValue: {
@@ -48,6 +50,7 @@ const loading = ref(false);
 const selectedItem = ref(null);
 let timeoutId = null;
 let lastQuery = "";
+const isRestrictedUser = computed(() => isRestrictedUserRole(auth));
 
 const normalizePatient = (patient) => {
   if (!patient?.id) return null;

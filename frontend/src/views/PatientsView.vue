@@ -22,7 +22,7 @@
         <PatientForm v-if="!isRestrictedUser" :all-guardians="allGuardians" @submit="create" />
         <v-divider class="my-4" />
 
-        <v-row>
+        <v-row v-if="!isRestrictedUser">
           <v-col cols="12" md="8">
             <v-text-field
               v-model="search"
@@ -31,7 +31,7 @@
               @update:modelValue="load"
             />
           </v-col>
-          <v-col v-if="!isRestrictedUser" cols="12" md="4" class="d-flex align-center">
+          <v-col v-if="isRestrictedUser" cols="12" md="4" class="d-flex align-center">
             <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
           </v-col>
         </v-row>
