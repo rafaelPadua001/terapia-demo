@@ -9,20 +9,21 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes import api_router
 from app.core.config import settings
+import os
+
+port = int(os.getenv("PORT", 8000))
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("app")
 
 app = FastAPI(title=settings.app_name)
 
+origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -78,4 +79,8 @@ app.include_router(api_router, prefix=settings.api_v1_prefix)
 
 @app.get("/")
 def health_check():
-    return {"status": "ok"}
+    return {"status": "ok"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port)
