@@ -1,19 +1,34 @@
-﻿from fastapi import APIRouter, Depends, HTTPException
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import create_access_token
+from app.core.security import BCRYPT_MAX_PASSWORD_BYTES, PasswordValidationError, create_access_token
 from app.models import User
 from app.schemas.schemas import LoginRequest, Token
 from app.services.auth_service import confirm_email_token
 from app.services.user_service import authenticate
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/login", response_model=Token)
 def login(data: LoginRequest, db: Session = Depends(get_db)):
-    user = authenticate(db, data.email, data.password)
+    password_bytes = len(data.password.encode("utf-8"))
+    logger.info("AUTH LOGIN password_bytes=%s", password_bytes)
+    if password_bytes > BCRYPT_MAX_PASSWORD_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Password cannot be longer than {BCRYPT_MAX_PASSWORD_BYTES} bytes",
+        )
+
+    try:
+        user = authenticate(db, data.email, data.password)
+    except PasswordValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     if data.role and user.role != data.role:
