@@ -9,4 +9,4 @@ export const canRemove = (userRole) => !["receptionist", "reception", "patient"]
 
 export const canValidateEvaluation = (userRole) => !["receptionist", "reception", "patient", "guardian"].includes(userRole || "");
 
-export const canDeleteEvolution = (userRole) => !["receptionist", "reception", "patient"].includes(userRole || "");
+export const canDeleteEvolution = (userRole) => !["receptionist", "reception", "patient", "guardian"].includes(userRole || "");
