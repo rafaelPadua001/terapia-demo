@@ -2,7 +2,7 @@
   <MainLayout>
     <v-card title="Avaliações">
       <v-card-text>
-        <template v-if="!isRestrictedUser">
+        <template v-if="canModerateEvaluations">
           <PatientAutocomplete v-model="patientId" />
           <EvaluationForm @submit="create" />
         </template>
@@ -44,13 +44,13 @@
             <StatusChip :status="item.status" />
           </template>
           <template #item.actions="{ item }">
-            <v-btn v-if="!isRestrictedUser" size="small" color="success" @click="validate(item.id, 'approved')">
+            <v-btn v-if="canModerateEvaluations" size="small" color="success" @click="validate(item.id, 'approved')">
               <v-icon>
                 <span class="material-symbols-outlined">check_circle</span>
               </v-icon>
               Aprovar
             </v-btn>
-            <v-btn v-if="!isRestrictedUser" size="small" color="error" @click="validate(item.id, 'rejected')">
+            <v-btn v-if="canModerateEvaluations" size="small" color="error" @click="validate(item.id, 'rejected')">
               <v-icon>
                 <span class="material-symbols-outlined">cancel</span>
               </v-icon>
@@ -63,7 +63,7 @@
               PDF
             </v-btn>
             <v-btn
-              v-if="!isRestrictedUser"
+              v-if="canDeleteEvaluations"
               icon
               color="error"
               size="small"
@@ -97,7 +97,7 @@ import ConfirmDialog from "../components/ConfirmDialog.vue";
 import api from "../services/api";
 import { useUiStore } from "../store/ui";
 import { useAuthStore } from "../store/auth";
-import { isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
+import { canRemove, canValidateEvaluation, isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
 import { fixEncoding } from "../utils/encoding";
 
 const auth = useAuthStore();
@@ -120,6 +120,8 @@ const deleteTarget = ref(null);
 const deletingId = ref(null);
 const showDeleted = ref(false);
 const isRestrictedUser = computed(() => isRestrictedUserRole(auth));
+const canModerateEvaluations = computed(() => canValidateEvaluation(auth.role));
+const canDeleteEvaluations = computed(() => canRemove(auth.role));
 
 const headers = [
   { title: "Paciente", key: "patient" },

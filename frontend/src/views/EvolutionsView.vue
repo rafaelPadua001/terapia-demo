@@ -30,6 +30,7 @@
           </template>
           <template #item.actions="{ item }">
             <v-btn
+              v-if="canDeleteEvolutionEntries"
               icon
               color="error"
               size="small"
@@ -63,7 +64,7 @@ import api from "../services/api";
 import { useUiStore } from "../store/ui";
 import { useAuthStore } from "../store/auth";
 import { fixEncoding } from "../utils/encoding";
-import { isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
+import { canDeleteEvolution, isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
 
 const auth = useAuthStore();
 const ui = useUiStore();
@@ -80,6 +81,7 @@ const deleteTarget = ref(null);
 const deletingId = ref(null);
 const showDeleted = ref(false);
 const isRestrictedUser = computed(() => isRestrictedUserRole(auth));
+const canDeleteEvolutionEntries = computed(() => canDeleteEvolution(auth.role));
 
 const headers = [
   { title: "Paciente", key: "patient" },

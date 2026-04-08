@@ -1,6 +1,28 @@
+from fastapi import HTTPException, status
 from sqlalchemy import false
 
 from app.models import Evaluation, Guardian, GuardianPatient, Patient, Validation
+from app.core.dependencies import normalize_role
+
+
+def can_remove(role: str | None) -> bool:
+    normalized_role = normalize_role(role)
+    return normalized_role not in {"receptionist", "patient"}
+
+
+def ensure_role_allowed(user, allowed_roles: list[str], action: str) -> None:
+    normalized_role = normalize_role(user.role)
+    normalized_allowed_roles = {normalize_role(role) for role in allowed_roles}
+    if normalized_role in normalized_allowed_roles:
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail={
+            "error": "Forbidden",
+            "message": "Voce nao tem permissao para executar esta acao",
+            "action": action,
+        },
+    )
 
 
 def resolve_patient_id(session, user):
@@ -79,7 +101,7 @@ def resolve_guardian_patient_ids(session, user):
 
 
 def apply_role_filter(query, user, model):
-    role = user.role
+    role = normalize_role(user.role)
     if role in {"admin", "therapist"}:
         return query
     if role == "receptionist":

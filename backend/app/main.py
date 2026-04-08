@@ -50,9 +50,13 @@ async def log_requests(request: Request, call_next):
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     logger.warning("http_error", extra={"path": request.url.path, "status": exc.status_code})
+    if isinstance(exc.detail, dict):
+        payload = {"code": f"HTTP_{exc.status_code}", **exc.detail}
+    else:
+        payload = {"error": exc.detail, "code": f"HTTP_{exc.status_code}"}
     return JSONResponse(
         status_code=exc.status_code,
-        content={"error": exc.detail, "code": f"HTTP_{exc.status_code}"},
+        content=payload,
     )
 
 

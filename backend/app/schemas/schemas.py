@@ -16,11 +16,10 @@ class ClinicCreate(ClinicBase):
 
 
 class ClinicOut(ClinicBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     created_at: datetime.datetime
-
-    class Config:
-        from_attributes = True
 
 
 class UserBase(BaseModel):
@@ -35,6 +34,8 @@ class UserCreate(UserBase):
 
 
 class UserOut(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     clinic_id: uuid.UUID
     email_is_confirmed: bool = False
@@ -42,9 +43,6 @@ class UserOut(UserBase):
     guardian_id: uuid.UUID | None = None
     created_at: datetime.datetime
     deleted_at: datetime.datetime | None = None
-
-    class Config:
-        from_attributes = True
 
 
 class GuardianBase(BaseModel):
@@ -63,14 +61,13 @@ class GuardianCreate(GuardianBase):
 
 
 class GuardianOut(GuardianBase):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
     id: uuid.UUID
     clinic_id: uuid.UUID
     patient_id: uuid.UUID | None = None
     patient_ids: list[uuid.UUID] = Field(default_factory=list)
     deleted_at: datetime.datetime | None = None
-
-    class Config:
-        from_attributes = True
 
 
 class PatientBase(BaseModel):
@@ -104,6 +101,8 @@ class PatientUpdate(BaseModel):
 
 
 class PatientOut(PatientBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     clinic_id: uuid.UUID
     created_by: uuid.UUID
@@ -114,19 +113,15 @@ class PatientOut(PatientBase):
     deleted_at: datetime.datetime | None = None
     guardians: list[GuardianOut] = []
 
-    class Config:
-        from_attributes = True
-
 
 class PatientSearchOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     name: str
     patient_code: str
     cpf: str | None = None
     birth_date: datetime.date
-
-    class Config:
-        from_attributes = True
 
 
 class AnamneseBase(BaseModel):
@@ -159,6 +154,8 @@ class AnamneseUpdate(BaseModel):
 
 
 class AnamneseOut(AnamneseBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     clinic_id: uuid.UUID
     patient_id: uuid.UUID
@@ -168,9 +165,6 @@ class AnamneseOut(AnamneseBase):
     created_at: datetime.datetime
     updated_at: datetime.datetime | None = None
     deleted_at: datetime.datetime | None = None
-
-    class Config:
-        from_attributes = True
 
 
 class EvaluationBase(BaseModel):
@@ -194,6 +188,8 @@ class EvaluationValidateRequest(BaseModel):
 
 
 class EvaluationOut(EvaluationBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     clinic_id: uuid.UUID
     patient_id: uuid.UUID
@@ -204,9 +200,6 @@ class EvaluationOut(EvaluationBase):
     created_at: datetime.datetime
     updated_at: datetime.datetime | None = None
     deleted_at: datetime.datetime | None = None
-
-    class Config:
-        from_attributes = True
 
 
 class ValidationBase(BaseModel):
@@ -224,6 +217,8 @@ class ValidationUpdate(BaseModel):
 
 
 class ValidationOut(ValidationBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     clinic_id: uuid.UUID
     evaluation_id: uuid.UUID
@@ -231,9 +226,6 @@ class ValidationOut(ValidationBase):
     validated_by: uuid.UUID
     created_at: datetime.datetime
     deleted_at: datetime.datetime | None = None
-
-    class Config:
-        from_attributes = True
 
 
 class EvolutionBase(BaseModel):
@@ -249,6 +241,8 @@ class EvolutionUpdate(BaseModel):
 
 
 class EvolutionOut(EvolutionBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     clinic_id: uuid.UUID
     patient_id: uuid.UUID
@@ -258,9 +252,6 @@ class EvolutionOut(EvolutionBase):
     created_at: datetime.datetime
     updated_at: datetime.datetime | None = None
     deleted_at: datetime.datetime | None = None
-
-    class Config:
-        from_attributes = True
 
 
 class DashboardOut(BaseModel):
@@ -357,6 +348,8 @@ class AppointmentUpdate(BaseModel):
 
 
 class AppointmentOut(AppointmentBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     clinic_id: uuid.UUID
     patient: PatientSearchOut | None = None
@@ -368,9 +361,6 @@ class AppointmentOut(AppointmentBase):
     updated_at: datetime.datetime | None = None
     deleted_at: datetime.datetime | None = None
     whatsapp_link: str | None = None
-
-    class Config:
-        from_attributes = True
 
 
 class AppointmentsPage(BaseModel):

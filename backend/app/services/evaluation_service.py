@@ -27,6 +27,16 @@ def _result_to_text(value) -> str:
     return str(value)
 
 
+def _get_accessible_evaluation(db: Session, user, evaluation_id: str) -> Evaluation | None:
+    query = (
+        db.query(Evaluation)
+        .options(joinedload(Evaluation.patient))
+        .filter(Evaluation.id == evaluation_id, Evaluation.clinic_id == user.clinic_id, Evaluation.deleted_at.is_(None))
+    )
+    query = apply_role_filter(query, user, Evaluation)
+    return query.first()
+
+
 def create_evaluation(db: Session, clinic_id, user_id, evaluation_in: EvaluationCreate) -> Evaluation:
     evaluation = Evaluation(
         clinic_id=clinic_id,
@@ -116,11 +126,15 @@ def validate_evaluation(db: Session, clinic_id, user_id, evaluation_id, status: 
 
 
 def generate_evaluation_pdf(db: Session, clinic_id, evaluation_id) -> bytes:
-    evaluation = (
-        db.query(Evaluation)
-        .filter(Evaluation.id == evaluation_id, Evaluation.clinic_id == clinic_id, Evaluation.deleted_at.is_(None))
-        .first()
-    )
+    class _PdfUser:
+        def __init__(self, clinic_id_value):
+            self.clinic_id = clinic_id_value
+            self.role = "admin"
+            self.patient_id = None
+            self.guardian_id = None
+            self.email = None
+
+    evaluation = _get_accessible_evaluation(db, _PdfUser(clinic_id), evaluation_id)
     if not evaluation:
         raise ValueError("Evaluation not found")
 
@@ -129,6 +143,34 @@ def generate_evaluation_pdf(db: Session, clinic_id, evaluation_id) -> bytes:
         .filter(Patient.id == evaluation.patient_id, Patient.clinic_id == clinic_id, Patient.deleted_at.is_(None))
         .first()
     )
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=14)
+    pdf.cell(0, 10, "Relatorio de Avaliacao", ln=True)
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, f"Paciente: {patient.name if patient else 'N/A'}", ln=True)
+    pdf.cell(0, 10, f"Diagnostico: {patient.diagnosis if patient else 'N/A'}", ln=True)
+    pdf.cell(0, 10, f"Tipo: {evaluation.type}", ln=True)
+    pdf.multi_cell(0, 8, f"Resultado: {_result_to_text(evaluation.result)}")
+    pdf.cell(0, 10, f"Status: {evaluation.status}", ln=True)
+    pdf.cell(0, 10, f"Data: {evaluation.created_at.strftime('%Y-%m-%d')}", ln=True)
+
+    return bytes(pdf.output(dest="S"))
+
+
+def generate_evaluation_pdf_for_user(db: Session, user, evaluation_id: str) -> bytes:
+    evaluation = _get_accessible_evaluation(db, user, evaluation_id)
+    if not evaluation:
+        raise ValueError("Evaluation not found")
+
+    patient = evaluation.patient
+    if patient is None:
+        patient = (
+            db.query(Patient)
+            .filter(Patient.id == evaluation.patient_id, Patient.clinic_id == user.clinic_id, Patient.deleted_at.is_(None))
+            .first()
+        )
 
     pdf = FPDF()
     pdf.add_page()

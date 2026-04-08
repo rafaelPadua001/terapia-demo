@@ -16,7 +16,7 @@ from app.schemas.schemas import (
 )
 from app.services.evaluation_service import (
     create_evaluation,
-    generate_evaluation_pdf,
+    generate_evaluation_pdf_for_user,
     list_evaluations,
     soft_delete_evaluation,
     update_evaluation,
@@ -97,10 +97,13 @@ def validate(
         raise HTTPException(status_code=404, detail=str(exc))
 
 
-@router.get("/{evaluation_id}/pdf", dependencies=[Depends(require_role("admin", "therapist"))])
+@router.get(
+    "/{evaluation_id}/pdf",
+    dependencies=[Depends(require_role("admin", "therapist", "receptionist", "reception", "patient", "guardian"))],
+)
 async def pdf(evaluation_id: str, db: Session = Depends(get_db), user=Depends(get_current_user)):
     try:
-        pdf_bytes = await run_in_threadpool(generate_evaluation_pdf, db, user.clinic_id, evaluation_id)
+        pdf_bytes = await run_in_threadpool(generate_evaluation_pdf_for_user, db, user, evaluation_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
 

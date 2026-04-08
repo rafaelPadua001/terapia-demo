@@ -55,7 +55,7 @@ class FakeUser:
 
 @pytest.fixture()
 def client():
-    app.dependency_overrides[get_db] = lambda: iter([FakeSession()])
+    app.dependency_overrides[get_db] = lambda: FakeSession()
     app.dependency_overrides[get_current_user] = lambda: FakeUser()
     with TestClient(app) as c:
         yield c
