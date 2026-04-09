@@ -39,7 +39,7 @@ const router = useRouter();
 const menuItems = computed(() => {
   const role = auth.role;
   if (role === "therapist" || role === "admin") {
-    return [
+    const items = [
       { title: "Dashboard", to: "/" },
       { title: "Pacientes", to: "/patients" },
       { title: "Anamneses", to: "/anamneses" },
@@ -48,6 +48,10 @@ const menuItems = computed(() => {
       { title: "Evoluções", to: "/evolutions" },
       { title: "Agendamentos", to: "/appointments" }
     ];
+    if (role === "admin") {
+      items.splice(2, 0, { title: "Terapeutas", to: "/therapists" });
+    }
+    return items;
   }
   if (role === "receptionist") {
     return [

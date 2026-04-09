@@ -12,6 +12,7 @@ import EvaluationsView from "../views/EvaluationsView.vue";
 import ValidationsView from "../views/ValidationsView.vue";
 import EvolutionsView from "../views/EvolutionsView.vue";
 import AppointmentsView from "../views/AppointmentsView.vue";
+import TherapistsView from "../views/TherapistsView.vue";
 
 const getHomePathByRole = (role) => {
   if (role === "patient" || role === "guardian") return "/portal";
@@ -32,7 +33,8 @@ const router = createRouter({
     { path: "/evaluations", component: EvaluationsView, meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist", "patient", "guardian"] } },
     { path: "/validations", component: ValidationsView, meta: { requiresAuth: true, roles: ["admin", "therapist"] } },
     { path: "/evolutions", component: EvolutionsView, meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist", "patient", "guardian"] } },
-    { path: "/appointments", component: AppointmentsView, meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist", "patient", "guardian"] } }
+    { path: "/appointments", component: AppointmentsView, meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist", "patient", "guardian"] } },
+    { path: "/therapists", component: TherapistsView, meta: { requiresAuth: true, roles: ["admin"] } }
   ]
 });
 

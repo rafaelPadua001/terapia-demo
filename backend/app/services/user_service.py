@@ -23,6 +23,8 @@ def create_user(
     password: str,
     role: str,
     clinic_id,
+    phone: str | None = None,
+    specialty: str | None = None,
     patient_id=None,
     guardian_id=None,
     email_is_confirmed: bool = False,
@@ -33,6 +35,8 @@ def create_user(
     user = User(
         name=name,
         email=email,
+        phone=phone,
+        specialty=specialty,
         password_hash=get_password_hash(password),
         role=role,
         clinic_id=clinic_id,
@@ -44,6 +48,91 @@ def create_user(
     db.commit()
     db.refresh(user)
     return user
+
+
+def create_therapist(
+    db: Session,
+    *,
+    clinic_id,
+    name: str,
+    email: str,
+    phone: str | None = None,
+    specialty: str | None = None,
+    password: str | None = None,
+) -> User:
+    normalized_password = password.strip() if password else ""
+    effective_password = normalized_password or DEFAULT_PORTAL_PASSWORD
+    return create_user(
+        db,
+        name=name,
+        email=email.strip().lower(),
+        phone=phone.strip() if phone else None,
+        specialty=specialty.strip() if specialty else None,
+        password=effective_password,
+        role="therapist",
+        clinic_id=clinic_id,
+        email_is_confirmed=True,
+    )
+
+
+def update_therapist(
+    db: Session,
+    *,
+    clinic_id,
+    therapist_id,
+    payload,
+) -> User:
+    therapist = (
+        db.query(User)
+        .filter(
+            User.id == therapist_id,
+            User.clinic_id == clinic_id,
+            User.role == "therapist",
+            User.deleted_at.is_(None),
+        )
+        .first()
+    )
+    if therapist is None:
+        raise ValueError("Therapist not found")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    if "name" in update_data and update_data["name"] is not None:
+        therapist.name = update_data["name"].strip()
+    if "email" in update_data and update_data["email"] is not None:
+        therapist.email = update_data["email"].strip().lower()
+    if "phone" in update_data:
+        therapist.phone = update_data["phone"].strip() if update_data["phone"] else None
+    if "specialty" in update_data:
+        therapist.specialty = update_data["specialty"].strip() if update_data["specialty"] else None
+
+    password = update_data.get("password")
+    if password is not None:
+        normalized_password = password.strip()
+        therapist.password_hash = get_password_hash(normalized_password or DEFAULT_PORTAL_PASSWORD)
+
+    db.commit()
+    db.refresh(therapist)
+    return therapist
+
+
+def soft_delete_therapist(db: Session, *, clinic_id, therapist_id) -> None:
+    therapist = (
+        db.query(User)
+        .filter(
+            User.id == therapist_id,
+            User.clinic_id == clinic_id,
+            User.role == "therapist",
+            User.deleted_at.is_(None),
+        )
+        .first()
+    )
+    if therapist is None:
+        raise ValueError("Therapist not found")
+
+    from datetime import datetime
+
+    therapist.deleted_at = datetime.utcnow()
+    db.commit()
 
 
 def ensure_linked_user(

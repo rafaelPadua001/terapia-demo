@@ -38,11 +38,42 @@ class UserOut(UserBase):
 
     id: uuid.UUID
     clinic_id: uuid.UUID
+    phone: str | None = None
+    specialty: str | None = None
     email_is_confirmed: bool = False
     patient_id: uuid.UUID | None = None
     guardian_id: uuid.UUID | None = None
     created_at: datetime.datetime
     deleted_at: datetime.datetime | None = None
+
+
+class TherapistCreate(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str | None = None
+    specialty: str | None = None
+    password: str | None = None
+
+
+class TherapistOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    clinic_id: uuid.UUID
+    name: str
+    email: EmailStr
+    phone: str | None = None
+    specialty: str | None = None
+    role: str
+    created_at: datetime.datetime
+
+
+class TherapistUpdate(BaseModel):
+    name: str | None = None
+    email: EmailStr | None = None
+    phone: str | None = None
+    specialty: str | None = None
+    password: str | None = None
 
 
 class GuardianBase(BaseModel):
