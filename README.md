@@ -78,6 +78,11 @@ npm install
 npm run dev
 ```
 
+### Deploy Render (realtime em subpasta)
+```bash
+cd realtime && npm install && npm start
+```
+
 ## Variaveis de Ambiente
 Arquivo: `backend/.env`
 

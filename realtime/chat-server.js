@@ -1,15 +1,15 @@
 const http = require("http");
-const fs = require("fs");
-const path = require("path");
-const dotenv = require("dotenv");
 const { Server } = require("socket.io");
 
-const envPath = path.resolve(__dirname, ".env");
-if (fs.existsSync(envPath)) {
-  dotenv.config({ path: envPath });
+if (process.env.NODE_ENV !== "production") {
+  try {
+    require("dotenv").config();
+  } catch (err) {
+    console.log("dotenv nao carregado (producao)");
+  }
 }
 
-const port = Number(process.env.CHAT_PORT || 8101);
+const port = Number(process.env.PORT || process.env.CHAT_PORT || 8101);
 
 const allowedOrigins = (
   process.env.CHAT_CORS_ORIGIN ||
@@ -18,6 +18,9 @@ const allowedOrigins = (
   .split(",")
   .map((item) => item.trim())
   .filter(Boolean);
+
+console.log("PORT:", process.env.PORT);
+console.log("NODE_ENV:", process.env.NODE_ENV);
 
 const server = http.createServer((req, res) => {
   if (req.url === "/health") {
