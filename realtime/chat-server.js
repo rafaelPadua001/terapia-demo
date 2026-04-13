@@ -13,7 +13,7 @@ const port = Number(process.env.PORT || process.env.CHAT_PORT || 8101);
 
 const allowedOrigins = (
   process.env.CHAT_CORS_ORIGIN ||
-  "https://terapia-demo-1.onrender.com,http://localhost:5173"
+  "https://terapia-demo.onrender.com"
 )
   .split(",")
   .map((item) => item.trim())
