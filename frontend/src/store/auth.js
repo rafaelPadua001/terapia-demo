@@ -15,13 +15,15 @@ const parseJwt = (token) => {
 export const useAuthStore = defineStore("auth", {
   state: () => {
     const token = localStorage.getItem("token") || "";
+    const persistedUserRaw = localStorage.getItem("auth_user");
+    const persistedUser = persistedUserRaw ? JSON.parse(persistedUserRaw) : null;
     const payload = token ? parseJwt(token) : null;
     return {
       token,
       role: payload?.role || "",
       userId: payload?.sub || "",
       clinicId: payload?.clinic_id || "",
-      user: null
+      user: persistedUser
     };
   },
   actions: {
@@ -33,6 +35,18 @@ export const useAuthStore = defineStore("auth", {
       this.role = payload.role || "";
       this.userId = payload.sub || "";
       this.clinicId = payload.clinic_id || "";
+      await this.loadCurrentUser();
+    },
+    async loadCurrentUser() {
+      if (!this.token) return;
+      try {
+        const { data } = await api.get("/users/me");
+        this.user = data;
+        localStorage.setItem("auth_user", JSON.stringify(data));
+      } catch {
+        this.user = null;
+        localStorage.removeItem("auth_user");
+      }
     },
     logout() {
       this.token = "";
@@ -41,6 +55,7 @@ export const useAuthStore = defineStore("auth", {
       this.clinicId = "";
       this.user = null;
       localStorage.removeItem("token");
+      localStorage.removeItem("auth_user");
     }
   }
 });

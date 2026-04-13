@@ -5,9 +5,10 @@ import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import "vuetify/styles";
 
-import App from "./App.vue";
-import router from "./router";
-import "./ui/theme.css";
+import App from "./App.vue";
+import router from "./router";
+import "./ui/theme.css";
+import { useAuthStore } from "./store/auth";
 
 const materialSymbols = {
   component: (props) => h("span", { class: "material-symbols-outlined" }, props.icon)
@@ -111,9 +112,17 @@ const vuetify = createVuetify({
   }
 });
 
-createApp(App)
-  .use(createPinia())
-  .use(router)
-  .use(vuetify)
-  .mount("#app");
+const pinia = createPinia();
+const app = createApp(App);
+
+app.use(pinia);
+app.use(router);
+app.use(vuetify);
+
+const auth = useAuthStore(pinia);
+if (auth.token && !auth.user) {
+  auth.loadCurrentUser().catch(() => {});
+}
+
+app.mount("#app");
 

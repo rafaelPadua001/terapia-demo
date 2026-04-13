@@ -1,69 +1,59 @@
 # terapia-demo
 
-Sistema de gestão clínica com `FastAPI + SQLAlchemy + PostgreSQL` no backend e `Vue 3 + Vuetify` no frontend.
+Sistema de gestao clinica com `FastAPI + SQLAlchemy + PostgreSQL` no backend e `Vue 3 + Vuetify` no frontend.
 
-## Visão Geral
-- Cadastro e gestão de pacientes
-- Cadastro e gestão de responsáveis
-- Anamneses, avaliações, validações e evoluções
-- Agendamentos com confirmação manual
-- Integração de WhatsApp por link
+## Visao Geral
+- Cadastro e gestao de pacientes
+- Cadastro e gestao de responsaveis
+- Anamneses, avaliacoes, validacoes e evolucoes
+- Agendamentos com confirmacao manual
+- Integracao de WhatsApp por link
 - Controle de acesso por perfil
-- Confirmação de e-mail para usuários com acesso ao portal
+- Confirmacao de e-mail para usuarios com acesso ao portal
 
 ## Perfis de Acesso
 - `admin`: acesso completo
-- `therapist`: acesso clínico completo
+- `therapist`: acesso clinico completo
 - `receptionist`: acesso operacional
-- `patient`: acesso apenas aos próprios dados
+- `patient`: acesso apenas aos proprios dados
 - `guardian`: acesso apenas aos pacientes vinculados
 
-## Atualizações Recentes
+## Atualizacoes Recentes
 
-### Pacientes e Responsáveis
-- Relacionamento `N:N` entre pacientes e responsáveis via `patient_guardians`
-- Um paciente pode ter múltiplos responsáveis
-- Um responsável pode estar vinculado a múltiplos pacientes
-- Formulário de paciente com:
-  - multi-select de responsáveis existentes
-  - criação inline de novo responsável
-  - vínculo automático do novo responsável ao paciente
+### Pacientes e Responsaveis
+- Relacionamento `N:N` entre pacientes e responsaveis via `patient_guardians`
+- Um paciente pode ter multiplos responsaveis
+- Um responsavel pode estar vinculado a multiplos pacientes
+- Formulario de paciente com:
+  - multi-select de responsaveis existentes
+  - criacao inline de novo responsavel
+  - vinculo automatico do novo responsavel ao paciente
 
-### Portal de Paciente e Responsável
-- Usuários `patient` e `guardian` são redirecionados para `/portal`
-- `patient` vê apenas o próprio cadastro
-- `guardian` vê todos os pacientes vinculados, incluindo co-dependentes
-- Formulários e ações de escrita ficam ocultos para esses perfis no frontend
-- O backend continua sendo a fonte real de permissão
+### Portal de Paciente e Responsavel
+- Usuarios `patient` e `guardian` sao redirecionados para `/portal`
+- `patient` ve apenas o proprio cadastro
+- `guardian` ve todos os pacientes vinculados, incluindo co-dependentes
+- Formularios e acoes de escrita ficam ocultos para esses perfis no frontend
+- O backend continua sendo a fonte real de permissao
 
 ### RBAC no Backend
-- Filtros por perfil aplicados em pacientes, avaliações, evoluções, validações e agendamentos
-- Proteção contra acesso indevido por ID direto
-- `patient` não acessa dados de terceiros
-- `guardian` não acessa pacientes fora do seu vínculo
+- Filtros por perfil aplicados em pacientes, avaliacoes, evolucoes, validacoes e agendamentos
+- Protecao contra acesso indevido por ID direto
+- `patient` nao acessa dados de terceiros
+- `guardian` nao acessa pacientes fora do seu vinculo
 
-### Agendamentos
-- CRUD de agendamentos ajustado
-- Campo `is_first_visit` persistindo corretamente
-- Campo `is_confirmed` para confirmação manual
-- Endpoint de confirmação manual do agendamento
-- Abertura do WhatsApp por link para envio manual da mensagem
-
-### E-mail
-- Criação automática de usuário para paciente/responsável quando houver e-mail
-- Envio de confirmação de cadastro por e-mail
-- Campo `email_is_confirmed` em `users`
-- Tela `/confirm-email` no frontend
-
-### Qualidade de Dados
-- Correções de UTF-8 em textos do sistema
-- Normalização de CPF e telefone
-- Melhorias no `.env` para tolerar BOM e leitura segura no backend
+### Chat em Tempo Real
+- Chat isolado em `realtime/` com Socket.IO
+- Lista de usuarios online filtrada por role
+- Mensagens em tempo real com status enviado, entregue e lido
+- Indicador de digitacao
+- Widget global com visual estilo WhatsApp
 
 ## Estrutura
 - `backend/`: API FastAPI, models, services, Alembic
-- `frontend/`: aplicação Vue 3 + Vuetify
-- `docs/`: documentação de uso
+- `frontend/`: aplicacao Vue 3 + Vuetify
+- `realtime/`: servidor Socket.IO isolado para chat em tempo real
+- `docs/`: documentacao de uso
 
 ## Como Executar
 
@@ -81,7 +71,14 @@ npm install
 npm run dev
 ```
 
-## Variáveis de Ambiente
+### Chat em Tempo Real
+```bash
+cd realtime
+npm install
+npm run dev
+```
+
+## Variaveis de Ambiente
 Arquivo: `backend/.env`
 
 Campos principais:
@@ -92,13 +89,16 @@ Campos principais:
 - `SMTP_PORT`
 - `CLINIC_EMAIL`
 - `CLINIC_EMAIL_PASSWORD`
+- `CHAT_PORT`
+- `CHAT_CORS_ORIGIN`
+- `VITE_CHAT_URL`
 
 Para Gmail, use senha de app.
 
 ## Seeds
 Arquivo: `backend/app/utils/seed.py`
 
-Usuários de demonstração:
+Usuarios de demonstracao:
 - `admin@clinic.com`
 - `terapeuta@demo.com`
 - `recepcao@demo.com`
@@ -110,7 +110,8 @@ Usuários de demonstração:
 - `0014_guardian_patients_cascade.py`
 - `0015_patient_guardians_nn.py`
 
-## Observações
-- Após atualizar o backend, rode `alembic upgrade head`
+## Observacoes
+- Apos atualizar o backend, rode `alembic upgrade head`
 - O frontend usa rota `/portal` para `patient` e `guardian`
-- O sistema mantém compatibilidade com criação inline de responsável no formulário do paciente
+- O sistema mantem compatibilidade com criacao inline de responsavel no formulario do paciente
+- O chat realtime roda isolado em `realtime/`

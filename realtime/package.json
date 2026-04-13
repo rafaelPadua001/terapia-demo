@@ -1,0 +1,15 @@
+{
+  "name": "terapia-demo-realtime",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Servidor Socket.IO isolado para o chat em tempo real do terapia-demo.",
+  "main": "chat-server.js",
+  "scripts": {
+    "dev": "node chat-server.js",
+    "start": "node chat-server.js"
+  },
+  "dependencies": {
+    "dotenv": "16.4.5",
+    "socket.io": "4.8.1"
+  }
+}
