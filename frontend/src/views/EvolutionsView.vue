@@ -5,9 +5,7 @@
         <PatientAutocomplete v-model="patientId" v-if="!isRestrictedUser"/>
         <v-textarea v-model="description" label="Descrição" v-if="!isRestrictedUser"/>
         <v-btn color="success" :loading="loadingAction" @click="create" v-if="!isRestrictedUser">
-          <v-icon>
-            <span class="material-symbols-outlined">save</span>
-          </v-icon>
+          <v-icon icon="fa-solid fa-floppy-disk" />
           Salvar
         </v-btn>
         <v-divider class="my-4" />
@@ -37,9 +35,7 @@
               :loading="deletingId === item.id"
               @click="askDelete(item)"
             >
-              <v-icon>
-                <span class="material-symbols-outlined">delete</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-trash" />
             </v-btn>
           </template>
         </v-data-table-server>

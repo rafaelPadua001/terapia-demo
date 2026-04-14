@@ -21,9 +21,7 @@
                   <v-text-field v-model="password" label="Senha" type="password" required />
 
                   <v-btn color="primary" :loading="loading" type="submit" block>
-                    <v-icon>
-                      <span class="material-symbols-outlined">login</span>
-                    </v-icon>
+                    <v-icon icon="fa-solid fa-right-to-bracket" />
                     Entrar
                   </v-btn>
                 </v-form>

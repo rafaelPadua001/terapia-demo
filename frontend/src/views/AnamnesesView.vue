@@ -43,9 +43,7 @@
               :loading="deletingId === item.id"
               @click="askDelete(item)"
             >
-              <v-icon>
-                <span class="material-symbols-outlined">delete</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-trash" />
             </v-btn>
           </template>
         </v-data-table-server>

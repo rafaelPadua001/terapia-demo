@@ -22,9 +22,7 @@
       </div>
     </div>
     <v-btn color="success" type="submit">
-      <v-icon>
-        <span class="material-symbols-outlined">save</span>
-      </v-icon>
+      <v-icon icon="fa-solid fa-floppy-disk" />
       Salvar
     </v-btn>
   </v-form>

@@ -32,9 +32,7 @@
               </v-card-text>
             </v-card>
             <v-btn v-if="!isRestrictedUser" class="mt-2" color="error" @click="confirmDelete = true">
-              <v-icon>
-                <span class="material-symbols-outlined">delete</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-trash" />
               Excluir
             </v-btn>
           </v-window-item>
@@ -66,9 +64,7 @@
               <v-card-title class="d-flex align-center justify-space-between">
                 <span>Responsáveis</span>
                 <v-btn v-if="!isRestrictedUser" color="success" size="small" @click="openGuardianCreate">
-                  <v-icon>
-                    <span class="material-symbols-outlined">add</span>
-                  </v-icon>
+                  <v-icon icon="fa-solid fa-plus" />
                   Adicionar responsável
                 </v-btn>
               </v-card-title>
@@ -87,9 +83,7 @@
                   <template #item.actions="{ item }">
                     <template v-if="!isRestrictedUser">
                       <v-btn size="small" color="primary" @click="openGuardianEdit(item)">
-                        <v-icon>
-                          <span class="material-symbols-outlined">edit</span>
-                        </v-icon>
+                        <v-icon icon="fa-solid fa-pen" />
                         Editar
                       </v-btn>
                       <v-btn
@@ -99,9 +93,7 @@
                         :loading="deletingGuardianId === item.id"
                         @click="askGuardianDelete(item)"
                       >
-                        <v-icon>
-                          <span class="material-symbols-outlined">delete</span>
-                        </v-icon>
+                        <v-icon icon="fa-solid fa-trash" />
                       </v-btn>
                     </template>
                     <span v-else>-</span>
@@ -151,15 +143,11 @@
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" color="grey" @click="guardianDialog = false">
-            <v-icon>
-              <span class="material-symbols-outlined">cancel</span>
-            </v-icon>
+            <v-icon icon="fa-solid fa-xmark" />
             Cancelar
           </v-btn>
           <v-btn color="success" :loading="savingGuardian" @click="saveGuardian">
-            <v-icon>
-              <span class="material-symbols-outlined">save</span>
-            </v-icon>
+            <v-icon icon="fa-solid fa-floppy-disk" />
             Salvar
           </v-btn>
         </v-card-actions>

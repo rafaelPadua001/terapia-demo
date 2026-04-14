@@ -6,15 +6,11 @@
       <v-card-actions>
         <v-spacer />
         <v-btn variant="text" color="grey" @click="cancel">
-          <v-icon>
-            <span class="material-symbols-outlined">cancel</span>
-          </v-icon>
+          <v-icon icon="fa-solid fa-xmark" />
           Cancelar
         </v-btn>
         <v-btn color="error" @click="confirm">
-          <v-icon>
-            <span class="material-symbols-outlined">delete</span>
-          </v-icon>
+          <v-icon icon="fa-solid fa-trash" />
           Confirmar
         </v-btn>
       </v-card-actions>
