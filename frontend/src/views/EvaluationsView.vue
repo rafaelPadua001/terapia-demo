@@ -45,21 +45,15 @@
           </template>
           <template #item.actions="{ item }">
             <v-btn v-if="canModerateEvaluations" size="small" color="success" @click="validate(item.id, 'approved')">
-              <v-icon>
-                <span class="material-symbols-outlined">check_circle</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-circle-check" />
               Aprovar
             </v-btn>
             <v-btn v-if="canModerateEvaluations" size="small" color="error" @click="validate(item.id, 'rejected')">
-              <v-icon>
-                <span class="material-symbols-outlined">cancel</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-xmark" />
               Rejeitar
             </v-btn>
             <v-btn size="small" color="red-darken-2" @click="downloadPdf(item.id)">
-              <v-icon>
-                <span class="material-symbols-outlined">picture_as_pdf</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-file-pdf" />
               PDF
             </v-btn>
             <v-btn
@@ -70,9 +64,7 @@
               :loading="deletingId === item.id"
               @click="askDelete(item)"
             >
-              <v-icon>
-                <span class="material-symbols-outlined">delete</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-trash" />
             </v-btn>
           </template>
         </v-data-table-server>

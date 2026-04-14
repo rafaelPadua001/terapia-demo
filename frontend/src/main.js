@@ -1,18 +1,29 @@
 import { createApp, h } from "vue";
-import { createPinia } from "pinia";
-import { createVuetify } from "vuetify";
-import * as components from "vuetify/components";
-import * as directives from "vuetify/directives";
-import "vuetify/styles";
-
+import { createPinia } from "pinia";
+
+
+import { createVuetify } from "vuetify";
+import { aliases, fa } from "vuetify/iconsets/fa";
+
+
+import * as components from "vuetify/components";
+
+
+import * as directives from "vuetify/directives";
+
+
+import "vuetify/styles";
+
+
+
+
+
 import App from "./App.vue";
 import router from "./router";
 import "./ui/theme.css";
 import { useAuthStore } from "./store/auth";
-
-const materialSymbols = {
-  component: (props) => h("span", { class: "material-symbols-outlined" }, props.icon)
-};
+
+
 
 const iconAliases = {
   checkboxOn: "check_box",
@@ -85,33 +96,73 @@ const vuetify = createVuetify({
   components,
   directives,
   icons: {
-    defaultSet: "materialSymbols",
+    defaultSet: "fa",
     aliases: iconAliases,
     sets: {
-      materialSymbols
+      fa
     }
   },
   theme: {
-    defaultTheme: "clinicsLight",
-    themes: {
-      clinicsLight: {
-        dark: false,
-        colors: {
-          primary: "#1B5E5B",
-          secondary: "#5E7C78",
-          accent: "#C3A35C",
-          background: "#F5F3EE",
-          surface: "#FFFFFF",
-          error: "#B42318",
-          info: "#1B5E5B",
-          success: "#11765B",
-          warning: "#B7791F"
-        }
-      }
-    }
-  }
-});
-
+    defaultTheme: "clinicsLight",
+
+
+    themes: {
+
+
+      clinicsLight: {
+
+
+        dark: false,
+
+
+        colors: {
+
+
+          primary: "#1B5E5B",
+
+
+          secondary: "#5E7C78",
+
+
+          accent: "#C3A35C",
+
+
+          background: "#F5F3EE",
+
+
+          surface: "#FFFFFF",
+
+
+          error: "#B42318",
+
+
+          info: "#1B5E5B",
+
+
+          success: "#11765B",
+
+
+          warning: "#B7791F"
+
+
+        }
+
+
+      }
+
+
+    }
+
+
+  }
+
+
+});
+
+
+
+
+
 const pinia = createPinia();
 const app = createApp(App);
 
@@ -125,4 +176,7 @@ if (auth.token && !auth.user) {
 }
 
 app.mount("#app");
-
+
+
+
+

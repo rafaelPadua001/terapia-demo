@@ -34,7 +34,18 @@ const router = createRouter({
     { path: "/validations", component: ValidationsView, meta: { requiresAuth: true, roles: ["admin", "therapist"] } },
     { path: "/evolutions", component: EvolutionsView, meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist", "patient", "guardian"] } },
     { path: "/appointments", component: AppointmentsView, meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist", "patient", "guardian"] } },
-    { path: "/therapists", component: TherapistsView, meta: { requiresAuth: true, roles: ["admin"] } }
+    { path: "/therapists", component: TherapistsView, meta: { requiresAuth: true, roles: ["admin"] } },
+    {
+      path: "/financial",
+      component: () => import("../views/financial/FinancialLayout.vue"),
+      meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist"] },
+      children: [
+        { path: "", component: () => import("../views/financial/TransactionsView.vue"), meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist"] } },
+        { path: "accounts", component: () => import("../views/financial/AccountsView.vue"), meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist"] } },
+        { path: "dashboard", component: () => import("../views/financial/DashboardView.vue"), meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist"] } }
+      ]
+    },
+    { path: "/my-financial", component: () => import("../views/financial/MyTransactionsView.vue"), meta: { requiresAuth: true, roles: ["patient", "guardian"] } }
   ]
 });
 

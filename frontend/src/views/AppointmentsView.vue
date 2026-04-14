@@ -45,15 +45,11 @@
           </v-row>
 
           <v-btn color="success" :loading="saving" @click="save">
-            <v-icon>
-              <span class="material-symbols-outlined">save</span>
-            </v-icon>
+            <v-icon icon="fa-solid fa-floppy-disk" />
             {{ editingId ? "Atualizar" : "Agendar" }}
           </v-btn>
           <v-btn variant="text" color="grey" class="ml-2" @click="resetForm">
-            <v-icon>
-              <span class="material-symbols-outlined">cancel</span>
-            </v-icon>
+            <v-icon icon="fa-solid fa-xmark" />
             Limpar
           </v-btn>
         </div>
@@ -102,9 +98,7 @@
                 :loading="confirmingId === item.id"
                 @click="confirmAppointment(item)"
               >
-                <v-icon>
-                  <span class="material-symbols-outlined">check_circle</span>
-                </v-icon>
+                <v-icon icon="fa-solid fa-circle-check" />
                 Confirmar
               </v-btn>
             </div>
@@ -114,18 +108,14 @@
               <v-tooltip text="Enviar WhatsApp" location="top" v-if="item.whatsapp_link">
                 <template #activator="{ props }">
                   <v-btn v-bind="props" icon color="success" size="small" @click="openWhatsapp(item)">
-                    <v-icon>
-                      <span class="material-symbols-outlined">chat</span>
-                    </v-icon>
+                    <v-icon icon="fa-solid fa-comment-dots" />
                   </v-btn>
                 </template>
               </v-tooltip>
               <v-tooltip text="Editar agendamento" location="top" v-if="canEdit">
                 <template #activator="{ props }">
                   <v-btn v-bind="props" icon color="primary" size="small" @click="edit(item)">
-                    <v-icon>
-                      <span class="material-symbols-outlined">edit</span>
-                    </v-icon>
+                    <v-icon icon="fa-solid fa-pen" />
                   </v-btn>
                 </template>
               </v-tooltip>
@@ -139,9 +129,7 @@
                     :loading="deletingId === item.id"
                     @click="askDelete(item)"
                   >
-                    <v-icon>
-                      <span class="material-symbols-outlined">delete</span>
-                    </v-icon>
+                    <v-icon icon="fa-solid fa-trash" />
                   </v-btn>
                 </template>
               </v-tooltip>

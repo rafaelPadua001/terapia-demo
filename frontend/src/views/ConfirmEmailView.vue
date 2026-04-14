@@ -6,9 +6,12 @@
           <v-card class="pa-6 text-center">
             <v-progress-circular v-if="loading" indeterminate color="primary" class="mb-4" />
             <v-icon v-else :color="success ? 'success' : 'error'" size="56" class="mb-4">
-              <span class="material-symbols-outlined">
-                {{ success ? "mark_email_read" : "error" }}
-              </span>
+              <template v-if="success">
+                <i class="fa-solid fa-envelope-circle-check"></i>
+              </template>
+              <template v-else>
+                <i class="fa-solid fa-circle-exclamation"></i>
+              </template>
             </v-icon>
             <div class="text-h5 mb-2">
               {{ success ? "Email confirmado" : "Não foi possível confirmar" }}
@@ -17,9 +20,7 @@
               {{ message }}
             </div>
             <v-btn color="primary" to="/login">
-              <v-icon>
-                <span class="material-symbols-outlined">login</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-right-to-bracket" />
               Ir para o login
             </v-btn>
           </v-card>

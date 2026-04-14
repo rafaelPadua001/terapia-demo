@@ -50,9 +50,7 @@
     />
 
     <v-btn v-if="showGuardians" class="mt-2" color="primary" variant="outlined" @click="guardianDialog = true">
-      <v-icon>
-        <span class="material-symbols-outlined">person_add</span>
-      </v-icon>
+      <v-icon icon="fa-solid fa-user-plus" />
       Adicionar novo responsável
     </v-btn>
 
@@ -61,9 +59,7 @@
     </v-chip>
 
     <v-btn class="mt-4" color="success" type="submit">
-      <v-icon>
-        <span class="material-symbols-outlined">save</span>
-      </v-icon>
+      <v-icon icon="fa-solid fa-floppy-disk" />
       Salvar
     </v-btn>
   </v-form>

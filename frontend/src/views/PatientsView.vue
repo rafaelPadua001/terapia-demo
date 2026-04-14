@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <MainLayout>
     <v-card :title="pageTitle">
       <v-card-text>
@@ -7,7 +7,7 @@
             {{ portalDescription }}
           </v-alert>
 
-          <v-row class="mb-2">
+          <v-row v-if="isGuardian" class="mb-2">
             <v-col cols="12" md="4">
               <v-card variant="outlined">
                 <v-card-text>
@@ -54,9 +54,7 @@
           </template>
           <template #item.actions="{ item }">
             <v-btn size="small" color="primary" :to="`/patients/${item.id}`">
-              <v-icon>
-                <span class="material-symbols-outlined">{{ isRestrictedUser ? "visibility" : "edit" }}</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-circle" />
               {{ isRestrictedUser ? "Abrir" : "Detalhe" }}
             </v-btn>
             <v-btn
@@ -67,9 +65,7 @@
               :loading="deletingId === item.id"
               @click="askDelete(item)"
             >
-              <v-icon>
-                <span class="material-symbols-outlined">delete</span>
-              </v-icon>
+              <v-icon icon="fa-solid fa-trash" />
             </v-btn>
           </template>
         </v-data-table-server>
@@ -206,3 +202,6 @@ const remove = async () => {
 load();
 loadGuardians();
 </script>
+
+
+

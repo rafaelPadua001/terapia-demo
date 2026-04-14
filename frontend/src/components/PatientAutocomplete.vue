@@ -1,12 +1,11 @@
-﻿<template>
+<template>
   <v-autocomplete
-    
-    v-model="selected"
+    v-model="selectedObject"
     v-model:search="search"
     :items="items"
     :loading="loading"
     item-title="label"
-    item-value="id"
+    return-object
     clearable
     hide-details="auto"
     label="Buscar paciente"
@@ -22,14 +21,17 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch } from "vue";
 import api from "../services/api";
-import { isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
 
 const props = defineProps({
   modelValue: {
-    type: String,
+    type: [String, Object],
     default: ""
+  },
+  returnObject: {
+    type: Boolean,
+    default: false
   },
   selectedPatient: {
     type: Object,
@@ -39,39 +41,30 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue"]);
 
-const selected = computed({
-  get: () => props.modelValue,
-  set: (value) => emit("update:modelValue", value)
-});
-
 const search = ref("");
 const items = ref([]);
 const loading = ref(false);
-const selectedItem = ref(null);
+const selectedObject = ref(null);
 let timeoutId = null;
 let lastQuery = "";
-const isRestrictedUser = computed(() => isRestrictedUserRole(auth));
 
 const normalizePatient = (patient) => {
   if (!patient?.id) return null;
-
   const name = patient.name || "Paciente";
   const patientCode = patient.patient_code || null;
-
   return {
     id: patient.id,
     name,
     patient_code: patientCode,
     birth_date: patient.birth_date || null,
-    label: `${name} - ${patientCode || "Sem código"}`
+    label: `${name}${patientCode ? ` - ${patientCode}` : ""}`
   };
 };
 
-const syncSelectedItem = (patient) => {
+const syncSelectedPatient = (patient) => {
   const normalized = normalizePatient(patient);
   if (!normalized) return;
-
-  selectedItem.value = normalized;
+  selectedObject.value = normalized;
   if (!items.value.some((item) => item.id === normalized.id)) {
     items.value = [normalized, ...items.value];
   }
@@ -81,39 +74,51 @@ const fetchPatients = async (term) => {
   loading.value = true;
   try {
     const { data } = await api.get("/patients/search", { params: { q: term } });
-    items.value = data.map(normalizePatient).filter(Boolean);
-    if (selected.value) {
-      const match = items.value.find((item) => item.id === selected.value);
-      if (match) selectedItem.value = match;
+    items.value = (Array.isArray(data) ? data : []).map(normalizePatient).filter(Boolean);
+    if (selectedObject.value) {
+      const match = items.value.find((item) => item.id === selectedObject.value.id);
+      if (match) selectedObject.value = match;
     }
   } catch {
     items.value = [];
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
 };
 
-watch(selected, (value) => {
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (!value) {
+      selectedObject.value = null;
+      return;
+    }
+
+    if (typeof value === "object" && value?.id) {
+      syncSelectedPatient(value);
+      return;
+    }
+
+    const match = items.value.find((item) => item.id === value);
+    if (match) {
+      selectedObject.value = match;
+    }
+  },
+  { immediate: true }
+);
+
+watch(selectedObject, (value) => {
   if (!value) {
-    selectedItem.value = null;
+    emit("update:modelValue", "");
     return;
   }
-
-  const match = items.value.find((item) => item.id === value);
-  if (match) {
-    selectedItem.value = match;
-    return;
-  }
-
-  syncSelectedItem(props.selectedPatient);
+  emit("update:modelValue", props.returnObject ? value : value.id);
 });
 
 watch(search, (value) => {
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-  }
+  if (timeoutId) clearTimeout(timeoutId);
 
   if (!value) {
-    items.value = selectedItem.value ? [selectedItem.value] : [];
     lastQuery = "";
     return;
   }
@@ -128,8 +133,7 @@ watch(search, (value) => {
 watch(
   () => props.selectedPatient,
   (value) => {
-    if (!value || !selected.value) return;
-    syncSelectedItem(value);
+    if (value?.id) syncSelectedPatient(value);
   },
   { immediate: true }
 );
