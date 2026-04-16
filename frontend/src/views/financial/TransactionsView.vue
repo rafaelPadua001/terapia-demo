@@ -108,10 +108,9 @@ const markPaid = async (item) => {
 
 const generatePaymentLink = async (item) => {
   const { data } = await generatePayment(item.id);
-  if (data?.payment_link) {
-    window.open(data.payment_link, "_blank", "noopener,noreferrer");
-  }
-  ui.notify("Link de pagamento gerado", "success");
+  const link = data?.payment_link || data?.external_id;
+  console.log("Link gerado:", link);
+  ui.notify("Link de pagamento gerado com sucesso", "success");
   await load();
 };
 
@@ -126,4 +125,5 @@ const handleNotify = ({ message }) => ui.notify(message, "success");
 
 onMounted(load);
 </script>
+
 
