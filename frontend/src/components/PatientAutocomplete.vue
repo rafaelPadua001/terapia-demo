@@ -47,6 +47,7 @@ const loading = ref(false);
 const selectedObject = ref(null);
 let timeoutId = null;
 let lastQuery = "";
+let lastEmittedId = null;
 
 const normalizePatient = (patient) => {
   if (!patient?.id) return null;
@@ -91,16 +92,23 @@ watch(
   (value) => {
     if (!value) {
       selectedObject.value = null;
+      lastEmittedId = null;
       return;
     }
 
     if (typeof value === "object" && value?.id) {
+      if (selectedObject.value?.id === value.id) {
+        return;
+      }
       syncSelectedPatient(value);
       return;
     }
 
     const match = items.value.find((item) => item.id === value);
     if (match) {
+      if (selectedObject.value?.id === match.id) {
+        return;
+      }
       selectedObject.value = match;
     }
   },
@@ -109,9 +117,16 @@ watch(
 
 watch(selectedObject, (value) => {
   if (!value) {
+    lastEmittedId = null;
     emit("update:modelValue", "");
     return;
   }
+
+  if (value.id && value.id === lastEmittedId) {
+    return;
+  }
+
+  lastEmittedId = value.id || null;
   emit("update:modelValue", props.returnObject ? value : value.id);
 });
 
