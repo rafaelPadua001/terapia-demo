@@ -1,10 +1,13 @@
 ﻿from datetime import datetime
 
+import os
+
 import requests
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.guardian_patient import GuardianPatient
 from app.models.user import User
 from app.modules.financial import repository
@@ -282,11 +285,13 @@ def delete_financial_transaction(db: Session, *, user, transaction_id) -> None:
     db.commit()
 
 
-def _create_mercadopago_preference(transaction: FinancialTransaction, account: FinancialAccount) -> str:
+def _create_mercadopago_preference(db: Session, transaction: FinancialTransaction, account: FinancialAccount) -> str:
     account_metadata = account.meta or {}
     access_token = str(account_metadata.get("access_token", "")).strip()
     if not access_token:
         raise HTTPException(status_code=400, detail="Conta Mercado Pago sem access_token configurado")
+
+    environment = str(account_metadata.get("environment", "sandbox")).strip().lower() or "sandbox"
 
     url = "https://api.mercadopago.com/checkout/preferences"
     headers = {
@@ -304,7 +309,36 @@ def _create_mercadopago_preference(transaction: FinancialTransaction, account: F
         "external_reference": str(transaction.id),
     }
 
+    frontend_base_url = str(settings.frontend_url or "").strip().rstrip("/")
+    if not frontend_base_url:
+        raise HTTPException(status_code=500, detail="FRONTEND_URL nao configurada")
+    payload["back_urls"] = {
+        "success": f"{frontend_base_url}/payment/success",
+        "failure": f"{frontend_base_url}/payment/failure",
+        "pending": f"{frontend_base_url}/payment/pending",
+    }
+    payload["auto_return"] = "approved"
+
+    patient_user = (
+        db.query(User)
+        .filter(
+            User.patient_id == transaction.patient_id,
+            User.clinic_id == transaction.clinic_id,
+            User.deleted_at.is_(None),
+        )
+        .first()
+    )
+    if patient_user and patient_user.email:
+        payload["payer"] = {"email": patient_user.email}
+
+    notification_url = str(account_metadata.get("notification_url", "")).strip()
+    if notification_url:
+        payload["notification_url"] = notification_url
+
     try:
+        print("MP ENV:", environment)
+        print("MP PAYLOAD:", payload)
+        print("MP PAYLOAD FINAL:", payload)
         response = requests.post(url, json=payload, headers=headers, timeout=20)
     except requests.RequestException:
         raise HTTPException(status_code=502, detail="Falha ao comunicar com Mercado Pago")
@@ -315,9 +349,12 @@ def _create_mercadopago_preference(transaction: FinancialTransaction, account: F
         raise HTTPException(status_code=502, detail="Erro ao criar pagamento Mercado Pago")
 
     data = response.json()
-    payment_link = data.get("sandbox_init_point") or data.get("init_point")
+    if environment == "production":
+        payment_link = data.get("init_point")
+    else:
+        payment_link = data.get("sandbox_init_point")
     if not payment_link:
-        raise HTTPException(status_code=502, detail="Resposta invalida do Mercado Pago")
+        raise HTTPException(status_code=502, detail="Link de pagamento nao retornado pelo Mercado Pago")
     return payment_link
 
 
@@ -343,7 +380,7 @@ def generate_payment_link(db: Session, *, user, transaction_id: str) -> dict:
     if account.type != "mercadopago":
         raise HTTPException(status_code=400, detail="Conta nao e Mercado Pago")
 
-    payment_link = _create_mercadopago_preference(transaction, account)
+    payment_link = _create_mercadopago_preference(db, transaction, account)
     transaction.external_id = payment_link
     db.commit()
     db.refresh(transaction)

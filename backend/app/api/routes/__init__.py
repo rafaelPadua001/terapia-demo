@@ -10,6 +10,7 @@ from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.guardians import router as guardians_router
 from app.api.routes.appointments import router as appointments_router
 from app.api.routes.users import router as users_router
+from app.api.routes.webhooks import router as webhooks_router
 from app.modules.financial.routes import router as financial_router
 from app.modules.notifications.routes import router as notifications_router
 
@@ -24,5 +25,7 @@ api_router.include_router(dashboard_router)
 api_router.include_router(guardians_router)
 api_router.include_router(appointments_router)
 api_router.include_router(users_router)
+api_router.include_router(webhooks_router)
 api_router.include_router(financial_router)
 api_router.include_router(notifications_router)
+

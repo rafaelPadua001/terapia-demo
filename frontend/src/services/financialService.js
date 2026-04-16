@@ -19,4 +19,4 @@ export const getAccounts = (params = {}) => api.get("/financial/accounts", { par
 export const createAccount = (payload) => api.post("/financial/accounts", payload);
 export const updateAccount = (accountId, payload) => api.patch(`/financial/accounts/${accountId}`, payload);
 export const deleteAccount = (accountId) => api.delete(`/financial/accounts/${accountId}`);
-export const getMyTransactions = () => api.get("/financial/my-transactions");
+export const getMyTransactions = (params = {}) => api.get("/financial/my-transactions", { params: cleanParams(params) });
