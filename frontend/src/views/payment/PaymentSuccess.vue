@@ -54,7 +54,7 @@ onMounted(async () => {
         transaction.value = current;
       }
     }, 3000);
-  } catch (error) {
+  } catch {
     errorMessage.value = "Nao foi possivel consultar os detalhes do pagamento.";
     loading.value = false;
   }
