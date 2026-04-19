@@ -16,6 +16,24 @@
         </v-col>
         <v-col cols="12" md="9">
           <div class="pa-5">
+            <div class="d-flex justify-end mb-4">
+              <v-btn
+                v-if="!mdAndDown"
+                variant="text"
+                prepend-icon="fa-solid fa-arrow-left"
+                @click="router.push('/')"
+              >
+                Voltar ao início
+              </v-btn>
+              <v-btn
+                v-else
+                icon
+                variant="text"
+                @click="router.push('/')"
+              >
+                <i class="fas fa-arrow-left"></i>
+              </v-btn>
+            </div>
             <router-view />
           </div>
         </v-col>
@@ -24,11 +42,30 @@
   </v-card>
 </template>
 
+<script setup>
+import { useDisplay } from "vuetify";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+const { mdAndDown } = useDisplay();
+</script>
+
 <style scoped>
-.financial-shell { overflow: hidden; }
+.financial-shell {
+  overflow: hidden;
+}
+
 .financial-sidebar {
   min-height: 72vh;
   background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
   border-right: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 960px) {
+  .financial-sidebar {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
 }
 </style>

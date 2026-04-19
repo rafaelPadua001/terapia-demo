@@ -9,10 +9,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BASE_DIR = Path(__file__).resolve().parents[2]
 ENV_PATH = BASE_DIR / ".env"
 
-logger = logging.getLogger("app.config")
-
-
-
 def clean_env_key(key: str) -> str:
     return key.replace("\ufeff", "")
 
@@ -82,7 +78,4 @@ class Settings(BaseSettings):
                 "DATABASE_URL invalida. Use: postgresql+psycopg2://user:pass@localhost:5432/db"
             )
         return value
-
-
 settings = Settings()
-print("DATABASE_URL:", settings.database_url[:20])
