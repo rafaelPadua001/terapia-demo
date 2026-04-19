@@ -1,11 +1,12 @@
 ﻿from fastapi import APIRouter, Depends
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_role
-from app.models import Evaluation, Evolution, Patient
+from app.models import Evaluation, Evolution, Patient, User
 from app.schemas.schemas import DashboardOut
+from app.services.evolution_service import serialize_evolution
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -36,7 +37,14 @@ def get_dashboard(db: Session = Depends(get_db), user=Depends(get_current_user))
         .scalar()
     )
     evolutions = (
-        db.query(Evolution)
+        db.query(Evolution, User)
+        .options(joinedload(Evolution.patient))
+        .outerjoin(
+            User,
+            (User.patient_id == Evolution.patient_id)
+            & (User.clinic_id == Evolution.clinic_id)
+            & (User.deleted_at.is_(None)),
+        )
         .filter(Evolution.clinic_id == user.clinic_id, Evolution.deleted_at.is_(None))
         .order_by(Evolution.created_at.desc())
         .limit(5)
@@ -49,8 +57,14 @@ def get_dashboard(db: Session = Depends(get_db), user=Depends(get_current_user))
             "patient_id": str(ev.patient_id),
             "description": ev.description,
             "created_at": ev.created_at.isoformat(),
+            "patient_name": serialized["patient"]["name"] if serialized["patient"] else None,
+            "patient_email": serialized["patient"]["email"] if serialized["patient"] else None,
+            "patient_email_confirmed": serialized["patient"]["email_confirmed"] if serialized["patient"] else None,
+            "patient_phone": serialized["patient"]["phone"] if serialized["patient"] else None,
+            "patient": serialized["patient"],
         }
-        for ev in evolutions
+        for ev, patient_user in evolutions
+        for serialized in [serialize_evolution(ev, patient_user)]
     ]
 
     return DashboardOut(

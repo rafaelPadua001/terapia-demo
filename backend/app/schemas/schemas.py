@@ -153,6 +153,9 @@ class PatientSearchOut(BaseModel):
     patient_code: str
     cpf: str | None = None
     birth_date: datetime.date
+    email: EmailStr | None = None
+    email_confirmed: bool | None = None
+    phone: str | None = None
 
 
 class AnamneseBase(BaseModel):
