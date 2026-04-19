@@ -3,71 +3,126 @@
     <v-card title="Avaliações">
       <v-card-text>
         <template v-if="canModerateEvaluations">
-          <PatientAutocomplete v-model="patientId" />
-          <EvaluationForm @submit="create" />
+          <v-tabs v-model="tab" bg-color="transparent" class="mb-4">
+            <v-tab value="list">Lista</v-tab>
+            <v-tab value="form">Cadastro</v-tab>
+          </v-tabs>
+          <v-window v-model="tab">
+            <v-window-item value="list">
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-text-field v-model="search" label="Buscar por tipo" @update:modelValue="load" />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="statusFilter"
+                    :items="statusOptions"
+                    label="Status"
+                    clearable
+                    @update:modelValue="load"
+                  />
+                </v-col>
+              </v-row>
+
+              <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
+
+              <v-data-table-server
+                :headers="headers"
+                :items="items"
+                :items-length="total"
+                :loading="loading"
+                v-model:page="page"
+                v-model:items-per-page="limit"
+                @update:page="load"
+                @update:items-per-page="load"
+              >
+                <template #item.patient="{ item }">
+                  <span>{{ formatPatient(item.patient) }}</span>
+                </template>
+                <template #item.type="{ item }">
+                  <span>{{ fixEncoding(item.type) }}</span>
+                </template>
+                <template #item.status="{ item }">
+                  <StatusChip :status="item.status" />
+                </template>
+                <template #item.actions="{ item }">
+                  <v-btn v-if="canModerateEvaluations" size="small" color="success" @click="validate(item.id, 'approved')">
+                    <v-icon icon="fa-solid fa-circle-check" />
+                    Aprovar
+                  </v-btn>
+                  <v-btn v-if="canModerateEvaluations" size="small" color="error" @click="validate(item.id, 'rejected')">
+                    <v-icon icon="fa-solid fa-xmark" />
+                    Rejeitar
+                  </v-btn>
+                  <v-btn size="small" color="red-darken-2" @click="downloadPdf(item.id)">
+                    <v-icon icon="fa-solid fa-file-pdf" />
+                    PDF
+                  </v-btn>
+                  <v-btn
+                    v-if="canDeleteEvaluations"
+                    icon
+                    color="error"
+                    size="small"
+                    :loading="deletingId === item.id"
+                    @click="askDelete(item)"
+                  >
+                    <v-icon icon="fa-solid fa-trash" />
+                  </v-btn>
+                </template>
+              </v-data-table-server>
+            </v-window-item>
+
+            <v-window-item value="form">
+              <PatientAutocomplete v-model="patientId" />
+              <EvaluationForm :key="formKey" @submit="create" />
+            </v-window-item>
+          </v-window>
         </template>
-        <v-divider class="my-4" />
-        <v-row>
-          <v-col cols="12" md="6">
-            <v-text-field v-model="search" label="Buscar por tipo" @update:modelValue="load" />
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-select
-              v-model="statusFilter"
-              :items="statusOptions"
-              label="Status"
-              clearable
-              @update:modelValue="load"
-            />
-          </v-col>
-        </v-row>
+        <template v-else>
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-text-field v-model="search" label="Buscar por tipo" @update:modelValue="load" />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-select
+                v-model="statusFilter"
+                :items="statusOptions"
+                label="Status"
+                clearable
+                @update:modelValue="load"
+              />
+            </v-col>
+          </v-row>
 
-        <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
+          <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
 
-        <v-data-table-server
-          :headers="headers"
-          :items="items"
-          :items-length="total"
-          :loading="loading"
-          v-model:page="page"
-          v-model:items-per-page="limit"
-          @update:page="load"
-          @update:items-per-page="load"
-        >
-          <template #item.patient="{ item }">
-            <span>{{ formatPatient(item.patient) }}</span>
-          </template>
-          <template #item.type="{ item }">
-            <span>{{ fixEncoding(item.type) }}</span>
-          </template>
-          <template #item.status="{ item }">
-            <StatusChip :status="item.status" />
-          </template>
-          <template #item.actions="{ item }">
-            <v-btn v-if="canModerateEvaluations" size="small" color="success" @click="validate(item.id, 'approved')">
-              <v-icon icon="fa-solid fa-circle-check" />
-              Aprovar
-            </v-btn>
-            <v-btn v-if="canModerateEvaluations" size="small" color="error" @click="validate(item.id, 'rejected')">
-              <v-icon icon="fa-solid fa-xmark" />
-              Rejeitar
-            </v-btn>
-            <v-btn size="small" color="red-darken-2" @click="downloadPdf(item.id)">
-              <v-icon icon="fa-solid fa-file-pdf" />
-              PDF
-            </v-btn>
-            <v-btn
-              v-if="canDeleteEvaluations"
-              icon
-              color="error"
-              size="small"
-              :loading="deletingId === item.id"
-              @click="askDelete(item)"
-            >
-              <v-icon icon="fa-solid fa-trash" />
-            </v-btn>
-          </template>
-        </v-data-table-server>
+          <v-data-table-server
+            :headers="headers"
+            :items="items"
+            :items-length="total"
+            :loading="loading"
+            v-model:page="page"
+            v-model:items-per-page="limit"
+            @update:page="load"
+            @update:items-per-page="load"
+          >
+            <template #item.patient="{ item }">
+              <span>{{ formatPatient(item.patient) }}</span>
+            </template>
+            <template #item.type="{ item }">
+              <span>{{ fixEncoding(item.type) }}</span>
+            </template>
+            <template #item.status="{ item }">
+              <StatusChip :status="item.status" />
+            </template>
+            <template #item.actions="{ item }">
+              <v-btn size="small" color="red-darken-2" @click="downloadPdf(item.id)">
+                <v-icon icon="fa-solid fa-file-pdf" />
+                PDF
+              </v-btn>
+            </template>
+          </v-data-table-server>
+        </template>
       </v-card-text>
     </v-card>
 
@@ -114,6 +169,8 @@ const showDeleted = ref(false);
 const isRestrictedUser = computed(() => isRestrictedUserRole(auth));
 const canModerateEvaluations = computed(() => canValidateEvaluation(auth.role));
 const canDeleteEvaluations = computed(() => canRemove(auth.role));
+const tab = ref("list");
+const formKey = ref(0);
 
 const headers = [
   { title: "Paciente", key: "patient" },
@@ -140,9 +197,15 @@ const load = async () => {
 
 const create = async (payload) => {
   try {
-    if (!patientId.value) return;
+    if (!patientId.value) {
+      ui.notify("Selecione um paciente", "warning");
+      return;
+    }
     await api.post("/evaluations", { ...payload, patient_id: patientId.value });
     ui.notify("Avaliação criada com sucesso");
+    patientId.value = "";
+    formKey.value += 1;
+    tab.value = "list";
     await load();
   } catch {
     ui.notify("Erro ao criar avaliação", "error");

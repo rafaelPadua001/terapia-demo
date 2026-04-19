@@ -1,8 +1,8 @@
 ﻿<template>
-  <v-form @submit.prevent="submit">
+  <v-form ref="formRef" v-model="isValid" @submit.prevent="submit">
     <v-text-field v-if="form.patient_code" v-model="form.patient_code" label="Código do paciente" readonly />
-    <v-text-field v-model="form.name" label="Nome" required />
-    <v-text-field v-model="form.birth_date" label="Data de nascimento" type="date" required />
+    <v-text-field v-model="form.name" label="Nome" :rules="[required]" required />
+    <v-text-field v-model="form.birth_date" label="Data de nascimento" type="date" :rules="[required]" required />
     <v-text-field
       v-model="form.cpf"
       label="CPF (opcional)"
@@ -20,7 +20,7 @@
       v-model="form.phone"
       label="Celular"
       placeholder="(00) 00000-0000"
-      :rules="phoneRules"
+      :rules="[required, ...phoneRules]"
       @update:modelValue="onPhoneInput"
     />
     <v-text-field
@@ -128,6 +128,9 @@ const props = defineProps({
   }
 });
 const emit = defineEmits(["submit"]);
+const formRef = ref(null);
+const isValid = ref(false);
+const required = (value) => !!String(value ?? "").trim() || "Campo obrigatório";
 
 const normalizeGuardianIds = (value) => {
   const ids = Array.isArray(value?.guardian_ids) && value.guardian_ids.length
@@ -237,7 +240,9 @@ const applyNewGuardian = () => {
   resetNewGuardian();
 };
 
-const submit = () => {
+const submit = async () => {
+  const { valid } = await formRef.value.validate();
+  if (!valid) return;
   const { patient_code, guardians, ...payload } = form;
   payload.cpf = normalizeCpf(form.cpf);
   payload.email = form.email?.trim() || null;

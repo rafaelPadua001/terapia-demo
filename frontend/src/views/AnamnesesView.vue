@@ -3,50 +3,90 @@
     <v-card title="Anamneses">
       <v-card-text>
         <template v-if="!isRestrictedUser">
-          <PatientAutocomplete v-model="patientId" />
-          <AnamnesisForm :schema="schema" @submit="create" />
+          <v-tabs v-model="tab" bg-color="transparent" class="mb-4">
+            <v-tab value="list">Lista</v-tab>
+            <v-tab value="form">Cadastro</v-tab>
+          </v-tabs>
+
+          <v-window v-model="tab">
+            <v-window-item value="list">
+              <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
+              <v-data-table-server
+                :headers="headers"
+                :items="items"
+                :items-length="total"
+                :loading="loading"
+                v-model:page="page"
+                v-model:items-per-page="limit"
+                @update:page="load"
+                @update:items-per-page="load"
+              >
+                <template #item.patient="{ item }">
+                  <span>{{ formatPatient(item.patient) }}</span>
+                </template>
+                <template #item.resumo="{ item }">
+                  <span>{{ getResumo(item) }}</span>
+                </template>
+                <template #item.data="{ item }">
+                  <div v-if="getAnamneseSections(item).length">
+                    <div v-for="section in getAnamneseSections(item)" :key="section.title">
+                      <div class="text-subtitle-2">{{ fixEncoding(section.title) }}</div>
+                      <div v-for="line in section.lines" :key="line.label" class="text-body-2">
+                        • {{ fixEncoding(line.label) }}: {{ fixEncoding(line.value) }}
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <template #item.actions="{ item }">
+                  <v-btn
+                    icon
+                    color="error"
+                    size="small"
+                    :loading="deletingId === item.id"
+                    @click="askDelete(item)"
+                  >
+                    <v-icon icon="fa-solid fa-trash" />
+                  </v-btn>
+                </template>
+              </v-data-table-server>
+            </v-window-item>
+
+            <v-window-item value="form">
+              <PatientAutocomplete v-model="patientId" />
+              <AnamnesisForm :key="formKey" :schema="schema" @submit="create" />
+            </v-window-item>
+          </v-window>
         </template>
-        <v-divider class="my-4" />
-        <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
-        <v-data-table-server
-          :headers="headers"
-          :items="items"
-          :items-length="total"
-          :loading="loading"
-          v-model:page="page"
-          v-model:items-per-page="limit"
-          @update:page="load"
-          @update:items-per-page="load"
-        >
-          <template #item.patient="{ item }">
-            <span>{{ formatPatient(item.patient) }}</span>
-          </template>
-          <template #item.resumo="{ item }">
-            <span>{{ getResumo(item) }}</span>
-          </template>
-          <template #item.data="{ item }">
-            <div v-if="getAnamneseSections(item).length">
-              <div v-for="section in getAnamneseSections(item)" :key="section.title">
-                <div class="text-subtitle-2">{{ fixEncoding(section.title) }}</div>
-                <div v-for="line in section.lines" :key="line.label" class="text-body-2">
-                  • {{ fixEncoding(line.label) }}: {{ fixEncoding(line.value) }}
+
+        <template v-else>
+          <v-data-table-server
+            :headers="headers"
+            :items="items"
+            :items-length="total"
+            :loading="loading"
+            v-model:page="page"
+            v-model:items-per-page="limit"
+            @update:page="load"
+            @update:items-per-page="load"
+          >
+            <template #item.patient="{ item }">
+              <span>{{ formatPatient(item.patient) }}</span>
+            </template>
+            <template #item.resumo="{ item }">
+              <span>{{ getResumo(item) }}</span>
+            </template>
+            <template #item.data="{ item }">
+              <div v-if="getAnamneseSections(item).length">
+                <div v-for="section in getAnamneseSections(item)" :key="section.title">
+                  <div class="text-subtitle-2">{{ fixEncoding(section.title) }}</div>
+                  <div v-for="line in section.lines" :key="line.label" class="text-body-2">
+                    • {{ fixEncoding(line.label) }}: {{ fixEncoding(line.value) }}
+                  </div>
                 </div>
               </div>
-            </div>
-          </template>
-          <template #item.actions="{ item }">
-            <v-btn
-              v-if="!isRestrictedUser"
-              icon
-              color="error"
-              size="small"
-              :loading="deletingId === item.id"
-              @click="askDelete(item)"
-            >
-              <v-icon icon="fa-solid fa-trash" />
-            </v-btn>
-          </template>
-        </v-data-table-server>
+            </template>
+          </v-data-table-server>
+        </template>
       </v-card-text>
     </v-card>
 
@@ -84,6 +124,8 @@ const deleteTarget = ref(null);
 const deletingId = ref(null);
 const showDeleted = ref(false);
 const isRestrictedUser = computed(() => isRestrictedUserRole(auth));
+const tab = ref("list");
+const formKey = ref(0);
 
 const headers = [
   { title: "Criado em", key: "created_at" },
@@ -116,10 +158,16 @@ const load = async () => {
 };
 
 const create = async (payload) => {
-  if (!patientId.value) return;
+  if (!patientId.value) {
+    ui.notify("Selecione um paciente", "warning");
+    return;
+  }
   try {
     await api.post("/anamneses", { patient_id: patientId.value, data: payload });
     ui.notify("Anamnese criada");
+    patientId.value = "";
+    formKey.value += 1;
+    tab.value = "list";
     await load();
   } catch {
     ui.notify("Erro ao criar anamnese", "error");

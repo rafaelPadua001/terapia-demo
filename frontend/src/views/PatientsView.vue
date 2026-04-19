@@ -19,56 +19,89 @@
           </v-row>
         </div>
 
-        <PatientForm v-if="!isRestrictedUser" :all-guardians="allGuardians" @submit="create" />
-        <v-divider class="my-4" />
+        <template v-if="!isRestrictedUser">
+          <v-tabs v-model="tab" bg-color="transparent" class="mb-4">
+            <v-tab value="list">Lista</v-tab>
+            <v-tab value="form">Cadastro</v-tab>
+          </v-tabs>
 
-        <v-row v-if="!isRestrictedUser">
-          <v-col cols="12" md="8">
-            <v-text-field
-              v-model="search"
-              :label="isRestrictedUser ? 'Buscar paciente vinculado' : 'Buscar por nome'"
-              :placeholder="isRestrictedUser ? 'Digite o nome do paciente' : undefined"
-              @update:modelValue="load"
-            />
-          </v-col>
-          <v-col v-if="isRestrictedUser" cols="12" md="4" class="d-flex align-center">
-            <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
-          </v-col>
-        </v-row>
+          <v-window v-model="tab">
+            <v-window-item value="list">
+              <v-row>
+                <v-col cols="12" md="8">
+                  <v-text-field
+                    v-model="search"
+                    label="Buscar por nome"
+                    @update:modelValue="load"
+                  />
+                </v-col>
+              </v-row>
 
-        <v-data-table-server
-          :headers="headers"
-          :items="items"
-          :items-length="total"
-          :loading="loading"
-          v-model:page="page"
-          v-model:items-per-page="limit"
-          @update:page="load"
-          @update:items-per-page="load"
-        >
-          <template #item.cpf="{ item }">
-            <span>{{ formatCpf(item.cpf || "") }}</span>
-          </template>
-          <template #item.guardians="{ item }">
-            <span>{{ formatGuardians(item.guardians) }}</span>
-          </template>
-          <template #item.actions="{ item }">
-            <v-btn size="small" color="primary" :to="`/patients/${item.id}`">
-              <v-icon icon="fa-solid fa-circle" />
-              {{ isRestrictedUser ? "Abrir" : "Detalhe" }}
-            </v-btn>
-            <v-btn
-              v-if="!isRestrictedUser"
-              icon
-              color="error"
-              size="small"
-              :loading="deletingId === item.id"
-              @click="askDelete(item)"
-            >
-              <v-icon icon="fa-solid fa-trash" />
-            </v-btn>
-          </template>
-        </v-data-table-server>
+              <v-data-table-server
+                :headers="headers"
+                :items="items"
+                :items-length="total"
+                :loading="loading"
+                v-model:page="page"
+                v-model:items-per-page="limit"
+                @update:page="load"
+                @update:items-per-page="load"
+              >
+                <template #item.cpf="{ item }">
+                  <span>{{ formatCpf(item.cpf || '') }}</span>
+                </template>
+                <template #item.guardians="{ item }">
+                  <span>{{ formatGuardians(item.guardians) }}</span>
+                </template>
+                <template #item.actions="{ item }">
+                  <v-btn size="small" color="primary" :to="`/patients/${item.id}`">
+                    <v-icon icon="fa-solid fa-circle" />
+                    Detalhe
+                  </v-btn>
+                  <v-btn
+                    icon
+                    color="error"
+                    size="small"
+                    :loading="deletingId === item.id"
+                    @click="askDelete(item)"
+                  >
+                    <v-icon icon="fa-solid fa-trash" />
+                  </v-btn>
+                </template>
+              </v-data-table-server>
+            </v-window-item>
+
+            <v-window-item value="form">
+              <PatientForm :key="formKey" :all-guardians="allGuardians" @submit="create" />
+            </v-window-item>
+          </v-window>
+        </template>
+
+        <template v-else>
+          <v-data-table-server
+            :headers="headers"
+            :items="items"
+            :items-length="total"
+            :loading="loading"
+            v-model:page="page"
+            v-model:items-per-page="limit"
+            @update:page="load"
+            @update:items-per-page="load"
+          >
+            <template #item.cpf="{ item }">
+              <span>{{ formatCpf(item.cpf || "") }}</span>
+            </template>
+            <template #item.guardians="{ item }">
+              <span>{{ formatGuardians(item.guardians) }}</span>
+            </template>
+            <template #item.actions="{ item }">
+              <v-btn size="small" color="primary" :to="`/patients/${item.id}`">
+                <v-icon icon="fa-solid fa-circle" />
+                Abrir
+              </v-btn>
+            </template>
+          </v-data-table-server>
+        </template>
       </v-card-text>
     </v-card>
 
@@ -108,6 +141,8 @@ const deletingId = ref(null);
 const showDeleted = ref(false);
 const isRestrictedUser = computed(() => isRestrictedUserRole(auth));
 const allGuardians = ref([]);
+const tab = ref("list");
+const formKey = ref(0);
 
 const isPortal = computed(() => route.path === "/portal");
 const isGuardian = computed(() => auth.role === "guardian");
@@ -172,6 +207,8 @@ const create = async (payload) => {
   try {
     await api.post("/patients", payload);
     ui.notify("Paciente criado com sucesso");
+    formKey.value += 1;
+    tab.value = "list";
     await load();
     await loadGuardians();
   } catch {
