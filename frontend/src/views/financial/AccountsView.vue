@@ -1,7 +1,7 @@
-﻿<template>
+<template>
   <div>
     <v-card rounded="xl" elevation="1">
-      <v-card-title class="d-flex align-center justify-space-between">
+      <v-card-title class="d-flex align-center justify-space-between flex-wrap ga-3">
         <div>
           <div class="text-h6">Contas financeiras</div>
           <div class="text-body-2 text-medium-emphasis">Mercado Pago, banco e caixa</div>
@@ -25,7 +25,11 @@
       </v-card-text>
     </v-card>
 
-    <v-dialog v-model="dialog" max-width="620">
+    <v-dialog
+      v-model="dialog"
+      max-width="620"
+      :fullscreen="mobile"
+    >
       <v-card rounded="xl">
         <v-card-title>{{ editingId ? 'Editar conta' : 'Criar conta' }}</v-card-title>
         <v-card-text>
@@ -36,7 +40,7 @@
           <v-expand-transition>
             <div v-if="form.type === 'mercadopago'" class="mt-4">
               <v-divider class="mb-4" />
-              <div class="text-subtitle-1 font-weight-medium mb-3">Configura\u00e7\u00e3o do Mercado Pago</div>
+              <div class="text-subtitle-1 font-weight-medium mb-3">Configuração do Mercado Pago</div>
               <v-text-field
                 v-model="form.metadata.access_token"
                 label="Access Token"
@@ -62,10 +66,12 @@
 
 <script setup>
 import { onMounted, reactive, ref } from "vue";
+import { useDisplay } from "vuetify";
 import { createAccount, deleteAccount as apiDeleteAccount, getAccounts, updateAccount } from "../../services/financialService";
 import { useUiStore } from "../../store/ui";
 
 const ui = useUiStore();
+const { smAndDown: mobile } = useDisplay();
 const loading = ref(false);
 const saving = ref(false);
 const dialog = ref(false);
@@ -75,7 +81,7 @@ const headers = [
   { title: "Nome", key: "name" },
   { title: "Tipo", key: "type" },
   { title: "Status", key: "is_active" },
-  { title: "A\u00e7\u00f5es", key: "actions", sortable: false }
+  { title: "Ações", key: "actions", sortable: false }
 ];
 const types = [
   { title: "Mercado Pago", value: "mercadopago" },
@@ -131,11 +137,12 @@ const openEdit = (item) => {
   form.name = item.name || "";
   form.type = item.type || "bank";
   form.is_active = Boolean(item.is_active);
-  if (item.type === "mercadopago" && item.metadata) {
-    form.metadata.access_token = item.metadata.access_token || "";
-    form.metadata.public_key = item.metadata.public_key || "";
-    form.metadata.notification_url = item.metadata.notification_url || "";
-    form.metadata.environment = item.metadata.environment || "sandbox";
+  const metadata = item.metadata || item.meta || {};
+  if (item.type === "mercadopago" && metadata) {
+    form.metadata.access_token = metadata.access_token || "";
+    form.metadata.public_key = metadata.public_key || "";
+    form.metadata.notification_url = metadata.notification_url || "";
+    form.metadata.environment = metadata.environment || "sandbox";
   } else {
     form.metadata.access_token = "";
     form.metadata.public_key = "";
@@ -181,4 +188,3 @@ const deleteAccount = async (id) => {
 
 onMounted(load);
 </script>
-

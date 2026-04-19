@@ -321,6 +321,7 @@ onBeforeUnmount(disconnectChatSocket);
   right: 24px;
   bottom: 24px;
   z-index: 1200;
+  pointer-events: none;
 }
 
 .chat-widget__panel {
@@ -338,6 +339,7 @@ onBeforeUnmount(disconnectChatSocket);
   gap: 16px;
   position: relative;
   overflow: hidden;
+  pointer-events: auto;
 }
 
 .chat-widget__panel::before {
@@ -437,6 +439,7 @@ onBeforeUnmount(disconnectChatSocket);
   background: linear-gradient(135deg, #25d366, #128c7e);
   box-shadow: 0 18px 32px rgba(18, 140, 126, 0.28);
   position: relative;
+  pointer-events: auto;
 }
 
 .chat-widget__fab i,

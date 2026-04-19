@@ -1,16 +1,34 @@
-﻿<template>
+<template>
   <v-card rounded="xl">
-    <v-card-title>Minhas cobranças</v-card-title>
+    <v-card-title class="d-flex align-center justify-space-between flex-wrap ga-2">
+      <div>
+        <div class="text-h6">Minhas cobranças</div>
+        <div class="text-body-2 text-medium-emphasis">Acompanhe pagamentos e vencimentos</div>
+      </div>
+    </v-card-title>
     <v-card-text>
       <v-data-table :headers="headers" :items="items" :loading="loading">
-        <template #item.amount="{ item }">{{ formatCurrency(item.amount) }}</template>
+        <template #item.amount="{ item }">
+          <div class="text-h6 font-weight-bold">{{ formatCurrency(item.amount) }}</div>
+        </template>
         <template #item.status="{ item }">
-          <v-chip :color="statusColor(item.status)" size="small" variant="flat">{{ statusLabel(item.status) }}</v-chip>
+          <v-chip :color="statusColor(item.status)" size="small" variant="flat">
+            {{ statusLabel(item.status) }}
+          </v-chip>
         </template>
         <template #item.due_date="{ item }">{{ formatDate(item.due_date) }}</template>
         <template #item.actions="{ item }">
           <v-btn
-            v-if="item.payment_method === 'mercadopago' && item.status === 'pending'"
+            v-if="item.payment_method === 'mercadopago' && !item.external_id && isPending(item.status)"
+            size="small"
+            color="primary"
+            variant="tonal"
+            @click="handlePayment(item)"
+          >
+            Gerar pagamento
+          </v-btn>
+          <v-btn
+            v-else-if="item.payment_method === 'mercadopago' && item.external_id && isPending(item.status)"
             size="small"
             color="success"
             variant="tonal"
@@ -18,6 +36,14 @@
           >
             Pagar
           </v-btn>
+          <v-chip
+            v-else-if="isPaid(item.status)"
+            size="small"
+            color="success"
+            variant="flat"
+          >
+            Pago
+          </v-chip>
           <span v-else class="text-caption text-medium-emphasis">-</span>
         </template>
       </v-data-table>
@@ -42,8 +68,10 @@ const headers = [
   { title: "Ações", key: "actions", sortable: false },
 ];
 
-const statusColor = (status) => ({ pending: "grey", paid: "success", overdue: "error", canceled: "deep-orange" }[status] || "grey");
+const statusColor = (status) => ({ pending: "warning", paid: "success", overdue: "error", canceled: "deep-orange" }[status] || "grey");
 const statusLabel = (status) => ({ pending: "Pendente", paid: "Pago", overdue: "Atrasado", canceled: "Cancelado" }[status] || status || "-");
+const isPending = (status) => status === "pending";
+const isPaid = (status) => status === "paid" || status === "approved";
 const formatCurrency = (value) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value || 0));
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString("pt-BR") : "-");
 

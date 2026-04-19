@@ -39,13 +39,10 @@ def _map_mp_status(status: str | None) -> str | None:
 
 @router.post("/mercadopago")
 async def mercadopago_webhook(request: Request, db: Session = Depends(get_db)):
-    # Mercado Pago pode enviar payload variavel (query params ou JSON)
     try:
         body = await request.json()
     except Exception:
         body = {}
-
-    print("MP WEBHOOK RECEBIDO:", body)
 
     payment_id = None
     if isinstance(body, dict):
@@ -80,9 +77,6 @@ async def mercadopago_webhook(request: Request, db: Session = Depends(get_db)):
     external_reference = payment_data.get("external_reference")
     status = payment_data.get("status")
     mapped_status = _map_mp_status(status)
-
-    print("MP PAYMENT:", payment_data)
-    print("MP STATUS:", status)
 
     if not external_reference:
         return {"status": "ok"}
