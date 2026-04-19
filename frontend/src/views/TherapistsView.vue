@@ -2,77 +2,92 @@
   <MainLayout>
     <v-card title="Terapeutas">
       <v-card-text>
-        <v-form class="mb-6" @submit.prevent="submit">
-          <v-row>
-            <v-col cols="12">
-              <div class="text-body-2 mb-4" style="color: #5e7c78;">
-                Cadastre terapeutas da clínica. A senha é opcional e, se ficar vazia, o sistema usa
-                <strong>Brasil2026</strong>.
-              </div>
-            </v-col>
-            <v-col cols="12" md="6" lg="5">
-              <v-text-field
-                v-model="form.name"
-                label="Nome completo"
-                placeholder="Ex.: Mariana Souza"
-                required
-              />
-            </v-col>
-            <v-col cols="12" md="6" lg="4">
-              <v-text-field
-                v-model="form.email"
-                label="E-mail"
-                type="email"
-                placeholder="terapeuta@clinica.com"
-                required
-              />
-            </v-col>
-            <v-col cols="12" md="6" lg="3">
-              <v-text-field
-                v-model="form.phone"
-                label="Telefone"
-                placeholder="(11) 99999-9999"
-                maxlength="15"
-                @update:modelValue="onPhoneInput"
-              />
-            </v-col>
-            <v-col cols="12" md="6" lg="6">
-              <v-text-field
-                v-model="form.specialty"
-                label="Especialidade"
-                placeholder="Ex.: Terapia ocupacional"
-              />
-            </v-col>
-            <v-col cols="12" md="6" lg="4">
-              <v-text-field
-                v-model="form.password"
-                label="Senha"
-                type="password"
-                placeholder="Senha opcional"
-                hint="Opcional. Se ficar vazio, usa Brasil2026."
-                persistent-hint
-              />
-            </v-col>
-            <v-col cols="12" md="6" lg="2" class="d-flex align-end">
-              <v-btn color="primary" type="submit" :loading="saving" block>
-                {{ editingId ? "Salvar" : "Cadastrar" }}
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-form>
+        <v-tabs v-model="tab" bg-color="trasparent" class="mb-4">
+          <v-tab value="list">Lista</v-tab>
+          <v-tab value="form">Cadastro</v-tab>
+        </v-tabs>
 
-        <v-data-table :headers="headers" :items="items" :loading="loading">
-          <template #item.actions="{ item }">
-            <div class="d-flex ga-2">
-              <v-btn size="small" variant="tonal" color="primary" @click="editTherapist(item)">
-                Editar
-              </v-btn>
-              <v-btn size="small" variant="tonal" color="error" @click="confirmDelete(item)">
-                Remover
-              </v-btn>
-            </div>
-          </template>
-        </v-data-table>
+        <v-window v-model="tab">
+          <v-window-item value="list">
+            <v-data-table :headers="headers" :items="items" :loading="loading">
+              <template #item.actions="{ item }">
+                <div class="d-flex ga-2">
+                  <v-btn size="small" variant="tonal" color="primary" @click="editTherapist(item)">
+                    Editar
+                  </v-btn>
+                  <v-btn size="small" variant="tonal" color="error" @click="confirmDelete(item)">
+                    Remover
+                  </v-btn>
+                </div>
+              </template>
+            </v-data-table>
+          </v-window-item>
+
+          <v-window-item value="form">
+            <v-form ref="formRef" v-model="isValid" class="mb-6" @submit.prevent="submit">
+              <v-row>
+                <v-col cols="12">
+                  <div class="text-body-2 mb-4" style="color: #5e7c78;">
+                    Cadastre terapeutas da clínica. A senha é opcional e, se ficar vazia, o sistema usa
+                    <strong>Brasil2026</strong>.
+                  </div>
+                </v-col>
+                <v-col cols="12" md="6" lg="5">
+                  <v-text-field
+                    v-model="form.name"
+                    label="Nome completo"
+                    placeholder="Ex.: Mariana Souza"
+                    :rules="[required]"
+                    required
+                  />
+                </v-col>
+                <v-col cols="12" md="6" lg="4">
+                  <v-text-field
+                    v-model="form.email"
+                    label="E-mail"
+                    type="email"
+                    placeholder="terapeuta@clinica.com"
+                    :rules="[required, emailRule]"
+                    required
+                  />
+                </v-col>
+                <v-col cols="12" md="6" lg="3">
+                  <v-text-field
+                    v-model="form.phone"
+                    label="Telefone"
+                    placeholder="(11) 99999-9999"
+                    maxlength="15"
+                    :rules="[required, phoneRule]"
+                    @update:modelValue="onPhoneInput"
+                  />
+                </v-col>
+                <v-col cols="12" md="6" lg="6">
+                  <v-text-field
+                    v-model="form.specialty"
+                    label="Especialidade"
+                    placeholder="Ex.: Terapia ocupacional"
+                    :rules="[required]"
+                  />
+                </v-col>
+                <v-col cols="12" md="6" lg="4">
+                  <v-text-field
+                    v-model="form.password"
+                    label="Senha"
+                    type="password"
+                    placeholder="Senha opcional"
+                    hint="Opcional. Se ficar vazio, usa Brasil2026."
+                    persistent-hint
+                  />
+                </v-col>
+                <v-col cols="12" md="6" lg="2" class="d-flex align-end">
+                  <v-btn color="primary" type="submit" :loading="saving" block>
+                    {{ editingId ? "Salvar" : "Cadastrar" }}
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-window-item>
+        </v-window>
       </v-card-text>
     </v-card>
 
@@ -106,12 +121,15 @@ const items = ref([]);
 const editingId = ref(null);
 const deleteDialog = ref(false);
 const deleteTarget = ref(null);
+const tab = ref("list");
+const formRef = ref(null);
+const isValid = ref(false);
 const form = reactive({
   name: "",
   email: "",
   phone: "",
   specialty: "",
-  password: ""
+  password: "",
 });
 
 const headers = [
@@ -119,8 +137,15 @@ const headers = [
   { title: "E-mail", key: "email" },
   { title: "Telefone", key: "phone" },
   { title: "Especialidade", key: "specialty" },
-  { title: "Ações", key: "actions", sortable: false }
+  { title: "Ações", key: "actions", sortable: false },
 ];
+
+const required = (value) => !!String(value ?? "").trim() || "Campo obrigatório";
+const emailRule = (value) => /.+@.+\..+/.test(String(value ?? "").trim()) || "E-mail inválido";
+const phoneRule = (value) => {
+  const digits = normalizePhone(value);
+  return digits && (digits.length === 10 || digits.length === 11) ? true : "Telefone inválido";
+};
 
 const onPhoneInput = (value) => {
   form.phone = formatPhoneInput(value);
@@ -132,7 +157,7 @@ const load = async () => {
     const { data } = await api.get("/users", { params: { role: "therapist" } });
     items.value = data.map((item) => ({
       ...item,
-      phone: formatPhone(item.phone || "")
+      phone: formatPhone(item.phone || ""),
     }));
   } catch {
     ui.notify("Erro ao carregar terapeutas", "error");
@@ -141,6 +166,9 @@ const load = async () => {
 };
 
 const submit = async () => {
+  const { valid } = await formRef.value.validate();
+  if (!valid) return;
+
   saving.value = true;
   try {
     const payload = {
@@ -148,7 +176,7 @@ const submit = async () => {
       email: form.email.trim(),
       phone: normalizePhone(form.phone),
       specialty: form.specialty.trim() || null,
-      password: form.password || null
+      password: form.password || null,
     };
     if (editingId.value) {
       await api.put(`/users/therapists/${editingId.value}`, payload);
@@ -158,6 +186,7 @@ const submit = async () => {
       ui.notify("Terapeuta cadastrado com sucesso");
     }
     resetForm();
+    tab.value = "list";
     await load();
   } catch {
     ui.notify(`Erro ao ${editingId.value ? "atualizar" : "cadastrar"} terapeuta`, "error");
@@ -167,6 +196,7 @@ const submit = async () => {
 
 const editTherapist = (item) => {
   editingId.value = item.id;
+  tab.value = "form";
   form.name = item.name || "";
   form.email = item.email || "";
   form.phone = formatPhone(item.phone || "");
@@ -204,6 +234,7 @@ const resetForm = () => {
   form.phone = "";
   form.specialty = "";
   form.password = "";
+  formRef.value?.resetValidation();
 };
 
 onMounted(load);

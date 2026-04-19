@@ -2,72 +2,166 @@
   <MainLayout>
     <v-card title="Agendamentos">
       <v-card-text>
-        <div v-if="canEdit" class="mb-4">
-          <v-row>
-            <v-col cols="12" md="6">
-              <PatientAutocomplete v-model="form.patient_id" :selected-patient="selectedPatient" />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="form.therapist_id"
-                :items="therapists"
-                item-title="name"
-                item-value="id"
-                label="Terapeuta"
-                :disabled="auth.role === 'therapist'"
-              />
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-text-field v-model="form.date" label="Data" type="date" />
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-text-field v-model="form.time" label="Hora" type="time" />
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-select v-model="form.type" :items="typeOptions" label="Tipo" />
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-select v-model="form.status" :items="statusOptions" label="Status" />
-            </v-col>
-            <v-col cols="12" md="6">
-              <v-textarea v-model="form.notes" label="Observações" rows="2" />
-            </v-col>
-            <v-col cols="12" md="6" class="d-flex align-center">
-              <v-checkbox
-                v-model="form.is_first_visit"
-                density="compact"
-                color="primary"
-                hide-details
-                label="Primeira consulta (acolhimento)"
-                class="mt-1"
-              />
-            </v-col>
-          </v-row>
+        <template v-if="canEdit">
+          <v-tabs v-model="tab" bg-color="transparent" class="mb-4">
+            <v-tab value="list">Lista</v-tab>
+            <v-tab value="form">Cadastro</v-tab>
+          </v-tabs>
 
-          <v-btn color="success" :loading="saving" @click="save">
-            <v-icon icon="fa-solid fa-floppy-disk" />
-            {{ editingId ? "Atualizar" : "Agendar" }}
-          </v-btn>
-          <v-btn variant="text" color="grey" class="ml-2" @click="resetForm">
-            <v-icon icon="fa-solid fa-xmark" />
-            Limpar
-          </v-btn>
-        </div>
+          <v-window v-model="tab">
+            <v-window-item value="list">
+              <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
+              <v-divider class="my-4" />
+              <v-data-table-server
+                :headers="headers"
+                :items="items"
+                :items-length="total"
+                :loading="loading"
+                v-model:page="page"
+                v-model:items-per-page="limit"
+                @update:page="load"
+                @update:items-per-page="load"
+              >
+                <template #item.patient="{ item }">
+                  <span>{{ formatPatient(item.patient) }}</span>
+                </template>
+                <template #item.type="{ item }">
+                  <span>{{ item.type || '-' }}</span>
+                  <v-chip v-if="item.is_first_visit" class="ml-2" color="orange" size="x-small" variant="flat">
+                    Primeira consulta
+                  </v-chip>
+                </template>
+                <template #item.date="{ item }">
+                  <span>{{ item.date || formatDate(item.scheduled_at) }}</span>
+                </template>
+                <template #item.time="{ item }">
+                  <span>{{ formatTime(item.time || item.scheduled_at) }}</span>
+                </template>
+                <template #item.is_confirmed="{ item }">
+                  <div class="d-flex align-center ga-2">
+                    <v-chip v-if="item.is_confirmed" color="success" variant="flat" size="small">
+                      Confirmado
+                    </v-chip>
+                    <v-chip v-else color="warning" variant="outlined" size="small">
+                      Pendente
+                    </v-chip>
+                    <v-btn
+                      v-if="!item.is_confirmed && canEdit"
+                      size="small"
+                      color="success"
+                      :loading="confirmingId === item.id"
+                      @click="confirmAppointment(item)"
+                    >
+                      <v-icon icon="fa-solid fa-circle-check" />
+                      Confirmar
+                    </v-btn>
+                  </div>
+                </template>
+                <template #item.actions="{ item }">
+                  <div class="actions-cell">
+                    <v-tooltip text="Enviar WhatsApp" location="top" v-if="item.whatsapp_link">
+                      <template #activator="{ props }">
+                        <v-btn v-bind="props" icon color="success" size="small" @click="openWhatsapp(item)">
+                          <v-icon icon="fa-solid fa-comment-dots" />
+                        </v-btn>
+                      </template>
+                    </v-tooltip>
+                    <v-tooltip text="Editar agendamento" location="top" v-if="canEdit">
+                      <template #activator="{ props }">
+                        <v-btn v-bind="props" icon color="primary" size="small" @click="edit(item)">
+                          <v-icon icon="fa-solid fa-pen" />
+                        </v-btn>
+                      </template>
+                    </v-tooltip>
+                    <v-tooltip text="Excluir agendamento" location="top" v-if="canEdit">
+                      <template #activator="{ props }">
+                        <v-btn
+                          v-bind="props"
+                          icon
+                          color="error"
+                          size="small"
+                          :loading="deletingId === item.id"
+                          @click="askDelete(item)"
+                        >
+                          <v-icon icon="fa-solid fa-trash" />
+                        </v-btn>
+                      </template>
+                    </v-tooltip>
+                  </div>
+                </template>
+              </v-data-table-server>
+            </v-window-item>
 
-        <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
+            <v-window-item value="form">
+              <v-form ref="formRef" v-model="isValid" class="mb-4" @submit.prevent="save">
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <PatientAutocomplete v-model="form.patient_id" :selected-patient="selectedPatient" />
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-select
+                      v-model="form.therapist_id"
+                      :items="therapists"
+                      item-title="name"
+                      item-value="id"
+                      label="Terapeuta"
+                      :rules="[required]"
+                      :disabled="auth.role === 'therapist'"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <v-text-field v-model="form.date" label="Data" type="date" :rules="[required]" />
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <v-text-field v-model="form.time" label="Hora" type="time" :rules="[required]" />
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <v-select v-model="form.type" :items="typeOptions" label="Tipo" :rules="[required]" />
+                  </v-col>
+                  <v-col cols="12" md="3">
+                    <v-select v-model="form.status" :items="statusOptions" label="Status" :rules="[required]" />
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-textarea v-model="form.notes" label="Observações" rows="2" />
+                  </v-col>
+                  <v-col cols="12" md="6" class="d-flex align-center">
+                    <v-checkbox
+                      v-model="form.is_first_visit"
+                      density="compact"
+                      color="primary"
+                      hide-details
+                      label="Primeira consulta (acolhimento)"
+                      class="mt-1"
+                    />
+                  </v-col>
+                </v-row>
 
-        <v-divider class="my-4" />
+                <v-btn color="success" :loading="saving" type="submit">
+                  <v-icon icon="fa-solid fa-floppy-disk" />
+                  {{ editingId ? "Atualizar" : "Agendar" }}
+                </v-btn>
+                <v-btn variant="text" color="grey" class="ml-2" @click="resetForm">
+                  <v-icon icon="fa-solid fa-xmark" />
+                  Limpar
+                </v-btn>
+              </v-form>
+            </v-window-item>
+          </v-window>
+        </template>
 
-        <v-data-table-server
-          :headers="headers"
-          :items="items"
-          :items-length="total"
-          :loading="loading"
-          v-model:page="page"
-          v-model:items-per-page="limit"
-          @update:page="load"
-          @update:items-per-page="load"
-        >
+        <template v-else>
+          <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
+          <v-divider class="my-4" />
+          <v-data-table-server
+            :headers="headers"
+            :items="items"
+            :items-length="total"
+            :loading="loading"
+            v-model:page="page"
+            v-model:items-per-page="limit"
+            @update:page="load"
+            @update:items-per-page="load"
+          >
           <template #item.patient="{ item }">
             <span>{{ formatPatient(item.patient) }}</span>
           </template>
@@ -112,30 +206,10 @@
                   </v-btn>
                 </template>
               </v-tooltip>
-              <v-tooltip text="Editar agendamento" location="top" v-if="canEdit">
-                <template #activator="{ props }">
-                  <v-btn v-bind="props" icon color="primary" size="small" @click="edit(item)">
-                    <v-icon icon="fa-solid fa-pen" />
-                  </v-btn>
-                </template>
-              </v-tooltip>
-              <v-tooltip text="Excluir agendamento" location="top" v-if="canEdit">
-                <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon
-                    color="error"
-                    size="small"
-                    :loading="deletingId === item.id"
-                    @click="askDelete(item)"
-                  >
-                    <v-icon icon="fa-solid fa-trash" />
-                  </v-btn>
-                </template>
-              </v-tooltip>
             </div>
           </template>
-        </v-data-table-server>
+          </v-data-table-server>
+        </template>
       </v-card-text>
     </v-card>
 
@@ -171,6 +245,9 @@ const deleteTarget = ref(null);
 const deletingId = ref(null);
 const confirmingId = ref(null);
 const showDeleted = ref(false);
+const tab = ref("list");
+const formRef = ref(null);
+const isValid = ref(false);
 
 const therapists = ref([]);
 const selectedPatient = ref(null);
@@ -187,6 +264,7 @@ const form = ref({
 });
 
 const editingId = ref(null);
+const required = (value) => !!String(value ?? "").trim() || "Campo obrigatório";
 
 const typeOptions = [
   "Terapia ABA",
@@ -251,11 +329,15 @@ const resetForm = () => {
     notes: ""
   };
   editingId.value = null;
+  formRef.value?.resetValidation();
 };
 
 const save = async () => {
-  if (!form.value.patient_id || !form.value.therapist_id || !form.value.date || !form.value.time) {
-    ui.notify("Preencha paciente, terapeuta, data e hora", "error");
+  const { valid } = await formRef.value.validate();
+  if (!valid || !form.value.patient_id) {
+    if (!form.value.patient_id) {
+      ui.notify("Selecione um paciente", "error");
+    }
     return;
   }
   saving.value = true;
@@ -275,6 +357,7 @@ const save = async () => {
       }
     }
     resetForm();
+    tab.value = "list";
     await load();
   } catch {
     ui.notify("Erro ao salvar agendamento", "error");
@@ -284,6 +367,7 @@ const save = async () => {
 
 const edit = (item) => {
   editingId.value = item.id;
+  tab.value = "form";
   selectedPatient.value = item.patient
     ? { ...item.patient, id: item.patient_id }
     : { id: item.patient_id, name: "Paciente", patient_code: null };

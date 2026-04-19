@@ -1,5 +1,5 @@
 ﻿<template>
-  <v-form @submit.prevent="submit">
+  <v-form ref="formRef" v-model="isValid" @submit.prevent="submit">
     <div v-for="(section, sIndex) in schema.sections" :key="sIndex">
       <h3>{{ section.title }}</h3>
       <div v-for="(field, fIndex) in section.fields" :key="fIndex">
@@ -7,17 +7,20 @@
           v-if="field.type === 'text'"
           v-model="formValues[`${sIndex}-${fIndex}`]"
           :label="field.label"
+          :rules="[required]"
         />
         <v-textarea
           v-else-if="field.type === 'textarea'"
           v-model="formValues[`${sIndex}-${fIndex}`]"
           :label="field.label"
+          :rules="[required]"
         />
         <v-select
           v-else-if="field.type === 'select'"
           v-model="formValues[`${sIndex}-${fIndex}`]"
           :label="field.label"
           :items="field.options || []"
+          :rules="[required]"
         />
       </div>
     </div>
@@ -29,7 +32,7 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 
 const props = defineProps({
   schema: {
@@ -51,8 +54,13 @@ const props = defineProps({
 const emit = defineEmits(["submit"]);
 
 const formValues = reactive({});
+const formRef = ref(null);
+const isValid = ref(false);
+const required = (value) => !!String(value ?? "").trim() || "Campo obrigatório";
 
-const submit = () => {
+const submit = async () => {
+  const { valid } = await formRef.value.validate();
+  if (!valid) return;
   emit("submit", { ...props.schema, values: { ...formValues } });
 };
 </script>

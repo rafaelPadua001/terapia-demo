@@ -1,7 +1,7 @@
 ﻿<template>
-  <v-form @submit.prevent="submit">
-    <v-text-field v-model="form.type" label="Tipo" required />
-    <v-textarea v-model="form.result" label="Resultado" rows="3" required />
+  <v-form ref="formRef" v-model="isValid" @submit.prevent="submit">
+    <v-text-field v-model="form.type" label="Tipo" :rules="[required]" required />
+    <v-textarea v-model="form.result" label="Resultado" rows="3" :rules="[required]" required />
     <v-btn color="success" type="submit">
       <v-icon icon="fa-solid fa-floppy-disk" />
       Salvar
@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import { reactive, watch } from "vue";
+import { reactive, ref, watch } from "vue";
 
 const props = defineProps({
   modelValue: {
@@ -21,6 +21,9 @@ const props = defineProps({
 const emit = defineEmits(["submit"]);
 
 const form = reactive({ ...props.modelValue });
+const formRef = ref(null);
+const isValid = ref(false);
+const required = (value) => !!String(value ?? "").trim() || "Campo obrigatório";
 
 const normalizeResult = (value) => {
   if (value && typeof value === "object") {
@@ -39,7 +42,9 @@ watch(
   }
 );
 
-const submit = () => {
+const submit = async () => {
+  const { valid } = await formRef.value.validate();
+  if (!valid) return;
   emit("submit", { type: form.type, result: form.result });
 };
 </script>

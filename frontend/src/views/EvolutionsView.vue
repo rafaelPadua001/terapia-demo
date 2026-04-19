@@ -1,44 +1,79 @@
 ﻿<template>
   <MainLayout>
     <v-card title="Evoluções">
-      <v-card-text >
-        <PatientAutocomplete v-model="patientId" v-if="!isRestrictedUser"/>
-        <v-textarea v-model="description" label="Descrição" v-if="!isRestrictedUser"/>
-        <v-btn color="success" :loading="loadingAction" @click="create" v-if="!isRestrictedUser">
-          <v-icon icon="fa-solid fa-floppy-disk" />
-          Salvar
-        </v-btn>
-        <v-divider class="my-4" />
-        <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" v-if="!isRestrictedUser"/>
-        <v-data-table-server
-          :headers="headers"
-          :items="items"
-          :items-length="total"
-          :loading="loading"
-          v-model:page="page"
-          v-model:items-per-page="limit"
-          @update:page="load"
-          @update:items-per-page="load"
-        >
-          <template #item.patient="{ item }">
-            <span>{{ formatPatient(item.patient) }}</span>
-          </template>
-          <template #item.description="{ item }">
-            <span>{{ fixEncoding(item.description) }}</span>
-          </template>
-          <template #item.actions="{ item }">
-            <v-btn
-              v-if="canDeleteEvolutionEntries"
-              icon
-              color="error"
-              size="small"
-              :loading="deletingId === item.id"
-              @click="askDelete(item)"
-            >
-              <v-icon icon="fa-solid fa-trash" />
-            </v-btn>
-          </template>
-        </v-data-table-server>
+      <v-card-text>
+        <template v-if="!isRestrictedUser">
+          <v-tabs v-model="tab" bg-color="transparent" class="mb-4">
+            <v-tab value="list">Lista</v-tab>
+            <v-tab value="form">Cadastro</v-tab>
+          </v-tabs>
+
+          <v-window v-model="tab">
+            <v-window-item value="list">
+              <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
+              <v-data-table-server
+                :headers="headers"
+                :items="items"
+                :items-length="total"
+                :loading="loading"
+                v-model:page="page"
+                v-model:items-per-page="limit"
+                @update:page="load"
+                @update:items-per-page="load"
+              >
+                <template #item.patient="{ item }">
+                  <span>{{ formatPatient(item.patient) }}</span>
+                </template>
+                <template #item.description="{ item }">
+                  <span>{{ fixEncoding(item.description) }}</span>
+                </template>
+                <template #item.actions="{ item }">
+                  <v-btn
+                    v-if="canDeleteEvolutionEntries"
+                    icon
+                    color="error"
+                    size="small"
+                    :loading="deletingId === item.id"
+                    @click="askDelete(item)"
+                  >
+                    <v-icon icon="fa-solid fa-trash" />
+                  </v-btn>
+                </template>
+              </v-data-table-server>
+            </v-window-item>
+
+            <v-window-item value="form">
+              <v-form ref="formRef" v-model="isValid" @submit.prevent="create">
+                <PatientAutocomplete v-model="patientId" />
+                <v-textarea v-model="description" label="Descrição" :rules="[required]" />
+                <v-btn color="success" type="submit" :loading="loadingAction">
+                  <v-icon icon="fa-solid fa-floppy-disk" />
+                  Salvar
+                </v-btn>
+              </v-form>
+            </v-window-item>
+          </v-window>
+        </template>
+
+        <template v-else>
+          <v-data-table-server
+            :headers="headers"
+            :items="items"
+            :items-length="total"
+            :loading="loading"
+            v-model:page="page"
+            v-model:items-per-page="limit"
+            @update:page="load"
+            @update:items-per-page="load"
+          >
+            <template #item.patient="{ item }">
+              <span>{{ formatPatient(item.patient) }}</span>
+            </template>
+            <template #item.description="{ item }">
+              <span>{{ fixEncoding(item.description) }}</span>
+            </template>
+          </v-data-table-server>
+        </template>
       </v-card-text>
     </v-card>
 
@@ -78,6 +113,10 @@ const deletingId = ref(null);
 const showDeleted = ref(false);
 const isRestrictedUser = computed(() => isRestrictedUserRole(auth));
 const canDeleteEvolutionEntries = computed(() => canDeleteEvolution(auth.role));
+const tab = ref("list");
+const formRef = ref(null);
+const isValid = ref(false);
+const required = (value) => !!String(value ?? "").trim() || "Campo obrigatório";
 
 const headers = [
   { title: "Paciente", key: "patient" },
@@ -97,12 +136,21 @@ const load = async () => {
 };
 
 const create = async () => {
-  if (!patientId.value || !description.value) return;
+  const { valid } = await formRef.value.validate();
+  if (!valid || !patientId.value) {
+    if (!patientId.value) {
+      ui.notify("Selecione um paciente", "warning");
+    }
+    return;
+  }
   loadingAction.value = true;
   try {
     await api.post("/evolutions", { patient_id: patientId.value, description: description.value });
     ui.notify("Evolução registrada");
+    patientId.value = "";
     description.value = "";
+    formRef.value?.resetValidation();
+    tab.value = "list";
     await load();
   } catch {
     ui.notify("Erro ao salvar evolução", "error");
