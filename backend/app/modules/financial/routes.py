@@ -12,8 +12,10 @@ from app.modules.financial.schemas import (
     FinancialTransactionOut,
     FinancialTransactionPayRequest,
     FinancialTransactionsPage,
+    FinancialTransactionUpdate,
 )
 from app.modules.financial.service import (
+    cancel_financial_transaction,
     create_billing_transaction,
     create_financial_account,
     delete_financial_account,
@@ -23,7 +25,9 @@ from app.modules.financial.service import (
     list_my_transactions,
     list_transactions,
     mark_transaction_as_paid,
+    refund_financial_transaction,
     update_financial_account,
+    update_financial_transaction,
 )
 from app.modules.notifications.schemas import NotificationOut
 from app.modules.notifications.service import list_notifications, mark_notification_as_read
@@ -114,6 +118,20 @@ def get_transactions(
 
 
 @router.patch(
+    "/transactions/{transaction_id}",
+    response_model=FinancialTransactionOut,
+    dependencies=[Depends(require_role("admin", "therapist", "receptionist"))],
+)
+def patch_transaction(
+    transaction_id: str,
+    payload: FinancialTransactionUpdate,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    return update_financial_transaction(db, user=user, transaction_id=transaction_id, payload=payload)
+
+
+@router.patch(
     "/transactions/{transaction_id}/pay",
     response_model=FinancialTransactionOut,
     dependencies=[Depends(require_role("admin", "therapist", "receptionist"))],
@@ -126,6 +144,32 @@ def pay_transaction(
 ):
     payment_method = payload.payment_method if payload else "pix"
     return mark_transaction_as_paid(db, user=user, transaction_id=transaction_id, payment_method=payment_method)
+
+
+@router.post(
+    "/transactions/{transaction_id}/cancel",
+    response_model=FinancialTransactionOut,
+    dependencies=[Depends(require_role("admin", "therapist", "receptionist"))],
+)
+def cancel_transaction(
+    transaction_id: str,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    return cancel_financial_transaction(db, user=user, transaction_id=transaction_id)
+
+
+@router.post(
+    "/transactions/{transaction_id}/refund",
+    response_model=FinancialTransactionOut,
+    dependencies=[Depends(require_role("admin", "therapist", "receptionist"))],
+)
+def refund_transaction(
+    transaction_id: str,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    return refund_financial_transaction(db, user=user, transaction_id=transaction_id)
 
 
 @router.delete(

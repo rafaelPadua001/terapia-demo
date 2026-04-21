@@ -21,27 +21,24 @@
           @click="onMenuItemClick(item.to)"
         >
           <template #append>
-            <v-badge
-              v-if="item.to === '/my-financial' && pendingCharges > 0"
-              :content="pendingCharges"
-              color="error"
-              inline
-            />
+            <v-badge v-if="item.to === '/my-financial' && pendingCharges > 0" :content="pendingCharges" color="error" inline />
           </template>
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
     <v-app-bar app color="surface" flat>
-      <v-app-bar-nav-icon v-if="isCompact" @click="drawer = !drawer" />
+      <v-btn v-if="isCompact" icon variant="text" class="mr-2" @click="drawer = !drawer">
+        <i class="fas fa-bars"></i>
+      </v-btn>
       <v-toolbar-title class="section-title">Painel clínico</v-toolbar-title>
       <v-spacer />
 
       <v-menu location="bottom end">
         <template #activator="{ props }">
           <v-btn icon variant="text" v-bind="props" @click="loadNotifications">
-            <v-badge :content="unreadCount" :model-value="unreadCount > 0" color="error">
-              <v-icon icon="fa-solid fa-bell" />
+            <v-badge :content="notifications.length" :model-value="notifications.length > 0" color="error">
+              <i class="fas fa-bell"></i>
             </v-badge>
           </v-btn>
         </template>
@@ -57,12 +54,15 @@
             >
               <v-list-item-title class="font-weight-medium">{{ notification.title }}</v-list-item-title>
               <v-list-item-subtitle>{{ notification.message }}</v-list-item-subtitle>
-              <v-list-item-subtitle class="text-caption text-medium-emphasis">
-                {{ formatDate(notification.created_at) }}
-              </v-list-item-subtitle>
+              <v-list-item-subtitle class="text-caption text-medium-emphasis">{{ formatDate(notification.created_at) }}</v-list-item-subtitle>
             </v-list-item>
           </v-list>
           <v-card-text v-else class="text-body-2 text-medium-emphasis">Nenhuma notificação por enquanto.</v-card-text>
+          <v-divider />
+          <v-card-actions>
+            <v-spacer />
+            <v-btn variant="text" @click="clearNotifications">Limpar notificações</v-btn>
+          </v-card-actions>
         </v-card>
       </v-menu>
 
@@ -99,7 +99,6 @@ const isCompact = computed(() => mdAndDown.value || smAndDown.value);
 let pollingId = null;
 let chargesPollingId = null;
 
-const unreadCount = computed(() => notifications.value.filter((item) => !item.is_read).length);
 const formatDate = (value) => (value ? new Date(value).toLocaleString("pt-BR") : "-");
 
 const loadNotifications = async () => {
@@ -112,12 +111,15 @@ const loadNotifications = async () => {
   }
 };
 
+const clearNotifications = () => {
+  notifications.value = [];
+};
+
 const loadPendingCharges = async () => {
   if (!auth.token || (auth.role !== "patient" && auth.role !== "guardian")) {
     pendingCharges.value = 0;
     return;
   }
-
   try {
     const { data } = await getMyTransactions({ page: 1, limit: 100 });
     const items = Array.isArray(data) ? data : data.items || [];
@@ -133,7 +135,6 @@ const openNotification = async (notification) => {
     await markNotificationAsRead(notification.id);
     notification.is_read = true;
   } catch {
-    // Nao interrompe UX se a requisicao falhar.
   }
 };
 

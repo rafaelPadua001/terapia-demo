@@ -32,59 +32,27 @@
                     <strong>Brasil2026</strong>.
                   </div>
                 </v-col>
-                <v-col cols="12" md="6" lg="5">
-                  <v-text-field
-                    v-model="form.name"
-                    label="Nome completo"
-                    placeholder="Ex.: Mariana Souza"
-                    :rules="[required]"
-                    required
-                  />
+                <v-col cols="12" md="6">
+                  <v-text-field v-model="form.name" label="Nome completo" placeholder="Ex.: Mariana Souza" :rules="[required]" required />
                 </v-col>
-                <v-col cols="12" md="6" lg="4">
-                  <v-text-field
-                    v-model="form.email"
-                    label="E-mail"
-                    type="email"
-                    placeholder="terapeuta@clinica.com"
-                    :rules="[required, emailRule]"
-                    required
-                  />
+                <v-col cols="12" md="6">
+                  <v-text-field v-model="form.email" label="E-mail" type="email" placeholder="terapeuta@clinica.com" :rules="[required, emailRule]" required />
                 </v-col>
-                <v-col cols="12" md="6" lg="3">
-                  <v-text-field
-                    v-model="form.phone"
-                    label="Telefone"
-                    placeholder="(11) 99999-9999"
-                    maxlength="15"
-                    :rules="[required, phoneRule]"
-                    @update:modelValue="onPhoneInput"
-                  />
+                <v-col cols="12" md="6">
+                  <v-text-field v-model="form.phone" label="Telefone" placeholder="(11) 99999-9999" maxlength="15" :rules="[required, phoneRule]" @update:modelValue="onPhoneInput" />
                 </v-col>
-                <v-col cols="12" md="6" lg="6">
-                  <v-text-field
-                    v-model="form.specialty"
-                    label="Especialidade"
-                    placeholder="Ex.: Terapia ocupacional"
-                    :rules="[required]"
-                  />
+                <v-col cols="12" md="6">
+                  <v-text-field v-model="form.specialty" label="Especialidade" placeholder="Ex.: Terapia ocupacional" :rules="[required]" />
                 </v-col>
-                <v-col cols="12" md="6" lg="4">
-                  <v-text-field
-                    v-model="form.password"
-                    label="Senha"
-                    type="password"
-                    placeholder="Senha opcional"
-                    hint="Opcional. Se ficar vazio, usa Brasil2026."
-                    persistent-hint
-                  />
-                </v-col>
-                <v-col cols="12" md="6" lg="2" class="d-flex align-end">
-                  <v-btn color="primary" type="submit" :loading="saving" block>
-                    {{ editingId ? "Salvar" : "Cadastrar" }}
-                  </v-btn>
+                <v-col cols="12" md="6">
+                  <v-text-field v-model="form.password" label="Senha" type="password" placeholder="Senha opcional" hint="Opcional. Se ficar vazio, usa Brasil2026." persistent-hint />
                 </v-col>
               </v-row>
+
+              <div class="d-flex justify-end ga-2 mt-4 flex-wrap">
+                <v-btn variant="outlined" color="secondary" @click="resetForm">Cancelar</v-btn>
+                <v-btn color="primary" type="submit" :loading="saving">{{ editingId ? "Salvar" : "Cadastrar" }}</v-btn>
+              </div>
             </v-form>
           </v-window-item>
         </v-window>
@@ -107,7 +75,6 @@
 
 <script setup>
 import { onMounted, reactive, ref } from "vue";
-
 import MainLayout from "../layouts/MainLayout.vue";
 import api from "../services/api";
 import { useUiStore } from "../store/ui";
@@ -124,13 +91,7 @@ const deleteTarget = ref(null);
 const tab = ref("list");
 const formRef = ref(null);
 const isValid = ref(false);
-const form = reactive({
-  name: "",
-  email: "",
-  phone: "",
-  specialty: "",
-  password: "",
-});
+const form = reactive({ name: "", email: "", phone: "", specialty: "", password: "" });
 
 const headers = [
   { title: "Nome", key: "name" },
@@ -155,10 +116,7 @@ const load = async () => {
   loading.value = true;
   try {
     const { data } = await api.get("/users", { params: { role: "therapist" } });
-    items.value = data.map((item) => ({
-      ...item,
-      phone: formatPhone(item.phone || ""),
-    }));
+    items.value = data.map((item) => ({ ...item, phone: formatPhone(item.phone || "") }));
   } catch {
     ui.notify("Erro ao carregar terapeutas", "error");
   }
@@ -168,7 +126,6 @@ const load = async () => {
 const submit = async () => {
   const { valid } = await formRef.value.validate();
   if (!valid) return;
-
   saving.value = true;
   try {
     const payload = {
@@ -234,6 +191,7 @@ const resetForm = () => {
   form.phone = "";
   form.specialty = "";
   form.password = "";
+  tab.value = "form";
   formRef.value?.resetValidation();
 };
 

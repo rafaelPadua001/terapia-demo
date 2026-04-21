@@ -46,6 +46,16 @@ class FinancialTransactionCreate(BaseModel):
     external_id: str | None = None
 
 
+class FinancialTransactionUpdate(BaseModel):
+    description: str = Field(min_length=2, max_length=255)
+    amount: float = Field(gt=0)
+    due_date: datetime
+    payment_method: str = "pix"
+    account_id: UUID
+    status: str = "pending"
+    external_id: str | None = None
+
+
 class PatientInfo(BaseModel):
     id: UUID
     name: str

@@ -5,6 +5,9 @@
         <div class="text-h6">Minhas cobranças</div>
         <div class="text-body-2 text-medium-emphasis">Acompanhe pagamentos e vencimentos</div>
       </div>
+      <v-btn variant="text" prepend-icon="fas fa-arrow-left" @click="$router.push('/portal')">
+        Voltar ao portal
+      </v-btn>
     </v-card-title>
     <v-card-text>
       <v-data-table :headers="headers" :items="items" :loading="loading">
