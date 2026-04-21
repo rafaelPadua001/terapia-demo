@@ -55,7 +55,7 @@
                 </template>
                 <template #item.actions="{ item }">
                   <v-btn size="small" color="primary" :to="`/patients/${item.id}`">
-                    <v-icon icon="fa-solid fa-circle" />
+                    <v-icon icon="fa-solid fa-eye" />
                     Detalhe
                   </v-btn>
                   <v-btn
@@ -96,7 +96,7 @@
             </template>
             <template #item.actions="{ item }">
               <v-btn size="small" color="primary" :to="`/patients/${item.id}`">
-                <v-icon icon="fa-solid fa-circle" />
+                <v-icon icon="fa-solid fa-eye" />
                 Abrir
               </v-btn>
             </template>
@@ -156,7 +156,7 @@ const portalDescription = computed(() => {
   if (isGuardian.value) {
     return "Aqui você acompanha todos os pacientes vinculados ao seu perfil, incluindo co-dependentes.";
   }
-  return "Aqui você acompanha apenas os seus próprios dados clínicos.";
+  return "Aqui você acompanha apenas os seus dados clínicos.";
 });
 
 const portalIcon = computed(() => (isGuardian.value ? "groups" : "person"));

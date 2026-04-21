@@ -17,6 +17,7 @@ from app.modules.financial.schemas import (
     FinancialAccountCreate,
     FinancialAccountUpdate,
     FinancialTransactionCreate,
+    FinancialTransactionUpdate,
 )
 from app.modules.notifications.service import create_notification
 from app.services.rbac_service import resolve_guardian_patient_ids, resolve_patient_id
@@ -166,6 +167,33 @@ def list_financial_accounts(db: Session, *, user):
     return repository.list_accounts(db, clinic_id=user.clinic_id)
 
 
+def update_financial_transaction(db: Session, *, user, transaction_id, payload: FinancialTransactionUpdate) -> FinancialTransaction:
+    _require_staff(user)
+    transaction = repository.get_transaction_by_id(db, clinic_id=user.clinic_id, transaction_id=transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    account = repository.get_account_by_id(db, clinic_id=user.clinic_id, account_id=payload.account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    transaction.description = payload.description.strip()
+    transaction.amount = payload.amount
+    transaction.due_date = payload.due_date
+    transaction.payment_method = _validate_payment_method(payload.payment_method)
+    transaction.account_id = payload.account_id
+    transaction.status = _validate_transaction_status(payload.status)
+    transaction.external_id = payload.external_id
+
+    if transaction.status != "paid":
+        transaction.paid_at = None
+
+    repository.update_transaction(db, transaction)
+    db.commit()
+    db.refresh(transaction)
+    return transaction
+
+
 def create_billing_transaction(db: Session, *, user, payload: FinancialTransactionCreate) -> FinancialTransaction:
     _require_staff(user)
     account = repository.get_account_by_id(db, clinic_id=user.clinic_id, account_id=payload.account_id)
@@ -255,6 +283,60 @@ def mark_transaction_as_paid(db: Session, *, user, transaction_id, payment_metho
         )
 
     notify_patient_payment(transaction)
+    db.commit()
+    db.refresh(transaction)
+    return transaction
+
+
+def cancel_financial_transaction(db: Session, *, user, transaction_id) -> FinancialTransaction:
+    _require_staff(user)
+    transaction = repository.get_transaction_by_id(db, clinic_id=user.clinic_id, transaction_id=transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transacao nao encontrada")
+
+    if transaction.status == "canceled":
+        return transaction
+
+    transaction.status = "canceled"
+    transaction.paid_at = None
+
+    notification_user_ids = _resolve_notification_user_ids(db, clinic_id=user.clinic_id, patient_id=transaction.patient_id)
+    for notification_user_id in notification_user_ids:
+        create_notification(
+            db,
+            user_id=notification_user_id,
+            title="Pagamento cancelado",
+            message=f"Cobranca de R$ {transaction.amount} cancelada",
+        )
+
+    repository.update_transaction(db, transaction)
+    db.commit()
+    db.refresh(transaction)
+    return transaction
+
+
+def refund_financial_transaction(db: Session, *, user, transaction_id) -> FinancialTransaction:
+    _require_staff(user)
+    transaction = repository.get_transaction_by_id(db, clinic_id=user.clinic_id, transaction_id=transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transacao nao encontrada")
+
+    if transaction.status != "paid":
+        raise HTTPException(status_code=400, detail="Somente transacoes pagas podem ser estornadas")
+
+    transaction.status = "canceled"
+    transaction.paid_at = None
+
+    notification_user_ids = _resolve_notification_user_ids(db, clinic_id=user.clinic_id, patient_id=transaction.patient_id)
+    for notification_user_id in notification_user_ids:
+        create_notification(
+            db,
+            user_id=notification_user_id,
+            title="Pagamento estornado",
+            message=f"Pagamento de R$ {transaction.amount} foi estornado",
+        )
+
+    repository.update_transaction(db, transaction)
     db.commit()
     db.refresh(transaction)
     return transaction

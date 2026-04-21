@@ -49,19 +49,27 @@
       persistent-hint
     />
 
-    <v-btn v-if="showGuardians" class="mt-2" color="primary" variant="outlined" @click="guardianDialog = true">
-      <v-icon icon="fa-solid fa-user-plus" />
-      Adicionar novo responsável
-    </v-btn>
-
     <v-chip v-if="form.new_guardian?.name" class="mt-2" color="primary" variant="tonal">
       Novo responsável: {{ form.new_guardian.name }}
     </v-chip>
 
-    <v-btn class="mt-4" color="success" type="submit">
-      <v-icon icon="fa-solid fa-floppy-disk" />
-      Salvar
-    </v-btn>
+    <div class="d-flex flex-wrap ga-2 justify-end mt-4">
+      <v-btn
+        v-if="showGuardians"
+        color="secondary"
+        variant="outlined"
+        size="default"
+        @click="guardianDialog = true"
+      >
+        <v-icon icon="fa-solid fa-user-plus" />
+        Adicionar novo responsável
+      </v-btn>
+
+      <v-btn color="success" type="submit" size="default">
+        <v-icon icon="fa-solid fa-floppy-disk" />
+        Salvar
+      </v-btn>
+    </div>
   </v-form>
 
   <v-dialog v-model="guardianDialog" max-width="520">

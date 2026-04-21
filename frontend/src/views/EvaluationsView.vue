@@ -94,8 +94,6 @@
             </v-col>
           </v-row>
 
-          <v-switch v-model="showDeleted" label="Exibir excluídos" @update:modelValue="load" />
-
           <v-data-table-server
             :headers="headers"
             :items="items"

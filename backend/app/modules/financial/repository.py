@@ -60,6 +60,12 @@ def get_transaction_by_id(db: Session, *, clinic_id, transaction_id):
     )
 
 
+def update_transaction(db: Session, transaction: FinancialTransaction) -> FinancialTransaction:
+    db.add(transaction)
+    db.flush()
+    return transaction
+
+
 def delete_transaction(db: Session, transaction: FinancialTransaction) -> None:
     db.delete(transaction)
     db.flush()
