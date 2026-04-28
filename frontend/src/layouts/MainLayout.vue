@@ -24,9 +24,15 @@
               v-bind="props"
               :id="item.id"
               :title="item.title"
-              link
-              :class="{ 'tutorial-target': currentTutorialTarget === item.id }"
-              @click="onMenuItemClick(item.to)"
+              :to="item.to"
+              :class="[
+                'menu-item',
+                {
+                'tutorial-target': currentTutorialTarget === item.id,
+                'active-menu': isMenuItemActive(item.to),
+                },
+              ]"
+              @click="onMenuItemClick"
             >
               <template #append>
                 <v-badge
@@ -255,10 +261,9 @@ const openNotification = async (notification) => {
   }
 };
 
-const onMenuItemClick = async (path) => {
-  if (router.currentRoute.value.path !== path) {
-    await router.push(path);
-  }
+const isMenuItemActive = (path) => route.path === path;
+
+const onMenuItemClick = () => {
   if (isCompact.value) {
     drawer.value = false;
   }
@@ -345,9 +350,25 @@ onBeforeUnmount(() => {
   background: rgba(25, 118, 210, 0.08);
 }
 
+.menu-item :deep(.v-list-item--active),
+:deep(.v-list-item--active) {
+  background: transparent !important;
+}
+
+.menu-item :deep(.v-list-item--active::before),
+:deep(.v-list-item--active::before) {
+  opacity: 0 !important;
+}
+
 .tutorial-target {
   outline: 2px solid rgba(45, 138, 111, 0.65);
   border-radius: 10px;
   background: rgba(45, 138, 111, 0.08);
+}
+
+.active-menu {
+  border-left: 4px solid #4caf50;
+  background: rgba(76, 175, 80, 0.12);
+  color: #1f3a32 !important;
 }
 </style>
