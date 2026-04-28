@@ -9,6 +9,7 @@ from app.services.audit_service import log_action
 from app.services.notification_service import send_whatsapp_message
 from app.services.patient_service import _normalize_phone
 from app.services.rbac_service import apply_role_filter
+from app.services.rich_text_service import normalize_rich_text
 
 
 def _safe_send(phone: str, message: str) -> None:
@@ -121,7 +122,7 @@ def create_appointment(db: Session, clinic_id, user, appointment_in: Appointment
         is_confirmed=False,
         scheduled_at=scheduled_at,
         status=appointment_in.status or "scheduled",
-        notes=appointment_in.notes,
+        notes=normalize_rich_text(appointment_in.notes) if appointment_in.notes is not None else None,
         created_by=user.id,
     )
     db.add(appointment)
@@ -215,6 +216,8 @@ def update_appointment(db: Session, clinic_id, appointment_id, appointment_in: A
         payload["scheduled_at"] = scheduled_at
         payload["date"] = date_value
         payload["time"] = time_value
+    if "notes" in payload:
+        payload["notes"] = normalize_rich_text(payload.get("notes")) if payload.get("notes") is not None else None
 
     for field, value in payload.items():
         setattr(appointment, field, value)

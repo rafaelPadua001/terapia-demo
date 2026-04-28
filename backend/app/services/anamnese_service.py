@@ -6,13 +6,14 @@ from app.models import Anamnese
 from app.schemas.schemas import AnamneseCreate, AnamneseUpdate
 from app.services.audit_service import log_action
 from app.services.rbac_service import apply_role_filter
+from app.services.rich_text_service import normalize_anamnese_data
 
 
 def create_anamnese(db: Session, clinic_id, user_id, anamnese_in: AnamneseCreate) -> Anamnese:
     anamnese = Anamnese(
         clinic_id=clinic_id,
         patient_id=anamnese_in.patient_id,
-        data=anamnese_in.data,
+        data=normalize_anamnese_data(anamnese_in.data),
         created_by=user_id,
     )
     db.add(anamnese)
@@ -30,7 +31,7 @@ def update_anamnese(db: Session, clinic_id, anamnese_id, anamnese_in: AnamneseUp
     )
     if not anamnese:
         raise ValueError("Anamnese not found")
-    anamnese.data = anamnese_in.data
+    anamnese.data = normalize_anamnese_data(anamnese_in.data)
     anamnese.updated_by = updated_by
     anamnese.updated_at = datetime.utcnow()
     db.commit()

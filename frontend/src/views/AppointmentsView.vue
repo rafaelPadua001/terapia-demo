@@ -122,7 +122,8 @@
                     <v-select v-model="form.status" :items="statusOptions" label="Status" :rules="[required]" />
                   </v-col>
                   <v-col cols="12" md="6">
-                    <v-textarea v-model="form.notes" label="Observações" rows="2" />
+                    <div class="text-caption text-medium-emphasis mb-2">Observacoes</div>
+                    <RichTextEditor v-model="form.notes" />
                   </v-col>
                   <v-col cols="12" md="6" class="d-flex align-center">
                     <v-checkbox
@@ -226,10 +227,12 @@ import { computed, ref } from "vue";
 import MainLayout from "../layouts/MainLayout.vue";
 import PatientAutocomplete from "../components/PatientAutocomplete.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
+import RichTextEditor from "../components/editor/RichTextEditor.vue";
 import api from "../services/api";
 import { useAuthStore } from "../store/auth";
 import { useUiStore } from "../store/ui";
 import { isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
+import { normalizeRichTextValue } from "../utils/richText";
 
 const auth = useAuthStore();
 const ui = useUiStore();
@@ -260,7 +263,7 @@ const form = ref({
   type: "",
   status: "scheduled",
   is_first_visit: false,
-  notes: ""
+  notes: normalizeRichTextValue("")
 });
 
 const editingId = ref(null);
@@ -326,7 +329,7 @@ const resetForm = () => {
     type: "",
     status: "scheduled",
     is_first_visit: false,
-    notes: ""
+    notes: normalizeRichTextValue("")
   };
   editingId.value = null;
   formRef.value?.resetValidation();
@@ -379,7 +382,7 @@ const edit = (item) => {
     type: item.type || "",
     status: item.status || "scheduled",
     is_first_visit: !!item.is_first_visit,
-    notes: item.notes || ""
+    notes: normalizeRichTextValue(item.notes)
   };
 };
 

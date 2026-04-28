@@ -42,7 +42,7 @@
         <v-list-item
           v-for="e in dashboard.last_evolutions"
           :key="e.id"
-          :title="e.description"
+          :title="formatEvolutionTitle(e.description)"
           :subtitle="formatDate(e.created_at)"
         >
           <template #prepend>
@@ -66,6 +66,7 @@
 import { reactive } from "vue";
 import MainLayout from "../layouts/MainLayout.vue";
 import api from "../services/api";
+import { richTextToPlainText } from "../utils/richText";
 
 const dashboard = reactive({
   total_patients: 0,
@@ -86,6 +87,8 @@ const initials = (value) =>
     .slice(0, 2)
     .map((part) => part[0].toUpperCase())
     .join("");
+
+const formatEvolutionTitle = (value) => richTextToPlainText(value) || "-";
 
 const load = async () => {
   const { data } = await api.get("/dashboard");

@@ -6,13 +6,14 @@ from app.models import Evolution, User
 from app.schemas.schemas import EvolutionCreate, EvolutionUpdate
 from app.services.audit_service import log_action
 from app.services.rbac_service import apply_role_filter
+from app.services.rich_text_service import normalize_rich_text
 
 
 def create_evolution(db: Session, clinic_id, user_id, evolution_in: EvolutionCreate) -> Evolution:
     evolution = Evolution(
         clinic_id=clinic_id,
         patient_id=evolution_in.patient_id,
-        description=evolution_in.description,
+        description=normalize_rich_text(evolution_in.description),
         created_by=user_id,
     )
     db.add(evolution)
@@ -32,6 +33,8 @@ def update_evolution(db: Session, clinic_id, evolution_id, evolution_in: Evoluti
         raise ValueError("Evolution not found")
 
     for field, value in evolution_in.model_dump(exclude_unset=True).items():
+        if field == "description":
+            value = normalize_rich_text(value)
         setattr(evolution, field, value)
 
     evolution.updated_by = updated_by
