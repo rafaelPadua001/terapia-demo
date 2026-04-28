@@ -7,24 +7,15 @@ from app.models import Evaluation, Patient, Validation
 from app.schemas.schemas import EvaluationCreate, EvaluationUpdate
 from app.services.audit_service import log_action
 from app.services.rbac_service import apply_role_filter
+from app.services.rich_text_service import normalize_rich_text, rich_text_to_plain_text
 
 
 def _normalize_result(value):
-    if isinstance(value, dict):
-        return value
-    if value is None:
-        return {"value": ""}
-    return {"value": str(value)}
+    return normalize_rich_text(value)
 
 
 def _result_to_text(value) -> str:
-    if isinstance(value, dict):
-        if "value" in value:
-            return str(value.get("value") or "")
-        if "raw" in value:
-            return str(value.get("raw") or "")
-        return str(value)
-    return str(value)
+    return rich_text_to_plain_text(value)
 
 
 def _get_accessible_evaluation(db: Session, user, evaluation_id: str) -> Evaluation | None:

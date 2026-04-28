@@ -56,7 +56,11 @@
           </v-window-item>
 
           <v-window-item value="evolucoes">
-            <v-data-table :headers="evoHeaders" :items="evolutions" />
+            <v-data-table :headers="evoHeaders" :items="evolutions">
+              <template #item.description="{ item }">
+                <span>{{ formatRichText(item.description) }}</span>
+              </template>
+            </v-data-table>
           </v-window-item>
 
           <v-window-item value="responsaveis">
@@ -166,6 +170,7 @@ import ConfirmDialog from "../components/ConfirmDialog.vue";
 import api from "../services/api";
 import guardianService from "../services/guardianService";
 import { formatAnamneseResumo } from "../utils/encoding";
+import { richTextToPlainText } from "../utils/richText";
 import { formatPhone, formatPhoneInput, normalizePhone } from "../utils/phone";
 import { useUiStore } from "../store/ui";
 import { useAuthStore } from "../store/auth";
@@ -220,6 +225,8 @@ const guardianHeaders = [
   { title: "Parentesco", key: "relationship_type" },
   { title: "Ações", key: "actions", sortable: false }
 ];
+
+const formatRichText = (value) => richTextToPlainText(value) || "-";
 
 const getGuardianRelationship = (guardian) =>
   guardian?.relationship_type || guardian?.relationship || "-";

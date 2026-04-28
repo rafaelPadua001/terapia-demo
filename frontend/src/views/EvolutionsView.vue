@@ -45,7 +45,10 @@
             <v-window-item value="form">
               <v-form ref="formRef" v-model="isValid" @submit.prevent="create">
                 <PatientAutocomplete v-model="patientId" />
-                <v-textarea v-model="description" label="Descrição" :rules="[required]" />
+                <div class="mb-4">
+                  <div class="text-caption text-medium-emphasis mb-2">Descricao</div>
+                  <RichTextEditor v-model="description" />
+                </div>
                 <v-btn color="success" type="submit" :loading="loadingAction">
                   <v-icon icon="fa-solid fa-floppy-disk" />
                   Salvar
@@ -91,10 +94,12 @@ import { ref, computed } from "vue";
 import MainLayout from "../layouts/MainLayout.vue";
 import PatientAutocomplete from "../components/PatientAutocomplete.vue";
 import ConfirmDialog from "../components/ConfirmDialog.vue";
+import RichTextEditor from "../components/editor/RichTextEditor.vue";
 import api from "../services/api";
 import { useUiStore } from "../store/ui";
 import { useAuthStore } from "../store/auth";
 import { fixEncoding } from "../utils/encoding";
+import { isRichTextEmpty, normalizeRichTextValue } from "../utils/richText";
 import { canDeleteEvolution, isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
 
 const auth = useAuthStore();
@@ -104,7 +109,7 @@ const total = ref(0);
 const loading = ref(false);
 const loadingAction = ref(false);
 const patientId = ref("");
-const description = ref("");
+const description = ref(normalizeRichTextValue(""));
 const page = ref(1);
 const limit = ref(10);
 const confirmDelete = ref(false);
@@ -137,18 +142,21 @@ const load = async () => {
 
 const create = async () => {
   const { valid } = await formRef.value.validate();
-  if (!valid || !patientId.value) {
+  if (!valid || !patientId.value || isRichTextEmpty(description.value)) {
     if (!patientId.value) {
       ui.notify("Selecione um paciente", "warning");
+    }
+    if (isRichTextEmpty(description.value)) {
+      ui.notify("Informe a descricao", "warning");
     }
     return;
   }
   loadingAction.value = true;
   try {
-    await api.post("/evolutions", { patient_id: patientId.value, description: description.value });
+    await api.post("/evolutions", { patient_id: patientId.value, description: normalizeRichTextValue(description.value) });
     ui.notify("Evolução registrada");
     patientId.value = "";
-    description.value = "";
+    description.value = normalizeRichTextValue("");
     formRef.value?.resetValidation();
     tab.value = "list";
     await load();

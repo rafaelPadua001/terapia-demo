@@ -265,7 +265,7 @@ class ValidationOut(ValidationBase):
 
 
 class EvolutionBase(BaseModel):
-    description: str
+    description: dict | str
 
 
 class EvolutionCreate(EvolutionBase):
@@ -273,7 +273,7 @@ class EvolutionCreate(EvolutionBase):
 
 
 class EvolutionUpdate(BaseModel):
-    description: str | None = None
+    description: dict | str | None = None
 
 
 class EvolutionOut(EvolutionBase):
@@ -385,7 +385,7 @@ class AppointmentBase(BaseModel):
     is_confirmed: bool = False
     scheduled_at: datetime.datetime | None = None
     status: str = "scheduled"
-    notes: str | None = None
+    notes: dict | str | None = None
 
 
 
@@ -403,7 +403,7 @@ class AppointmentUpdate(BaseModel):
     is_confirmed: bool | None = None
     scheduled_at: datetime.datetime | None = None
     status: str | None = None
-    notes: str | None = None
+    notes: dict | str | None = None
 
 
 class AppointmentOut(AppointmentBase):

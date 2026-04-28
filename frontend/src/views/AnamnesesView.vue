@@ -110,6 +110,7 @@ import { useUiStore } from "../store/ui";
 import { useAuthStore } from "../store/auth";
 import { isRestrictedUser as isRestrictedUserRole } from "../composables/useAuth";
 import { fixEncoding } from "../utils/encoding";
+import { richTextToPlainText } from "../utils/richText";
 
 const auth = useAuthStore();
 const ui = useUiStore();
@@ -204,6 +205,7 @@ const formatPatient = (patient) => {
 const getResumo = (anamnese) => {
   if (!anamnese?.data?.values) return "-";
   return Object.values(anamnese.data.values)
+    .map((value) => (typeof value === "object" ? richTextToPlainText(value) : value))
     .filter((value) => value)
     .join(", ");
 };
@@ -217,8 +219,9 @@ const getAnamneseSections = (item) => {
     (section.fields || []).forEach((field, fIndex) => {
       const key = `${sIndex}-${fIndex}`;
       const value = data.values?.[key];
-      if (value !== undefined && value !== null && String(value).trim() !== "") {
-        lines.push({ label: field.label || "Campo", value: String(value) });
+      const normalizedValue = typeof value === "object" ? richTextToPlainText(value) : String(value ?? "").trim();
+      if (normalizedValue) {
+        lines.push({ label: field.label || "Campo", value: normalizedValue });
       }
     });
     if (lines.length) {

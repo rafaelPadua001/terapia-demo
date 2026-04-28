@@ -1,12 +1,15 @@
-﻿export function fixEncoding(text) {
+import { richTextToPlainText } from "./richText";
+
+export function fixEncoding(text) {
   if (text === null || text === undefined) return "";
+  if (typeof text === "object") return richTextToPlainText(text);
   return String(text);
 }
 
 const normalizeValue = (value) => {
   if (value === null || value === undefined) return "";
   if (Array.isArray(value)) return value.filter(Boolean).join(", ");
-  if (typeof value === "object") return JSON.stringify(value);
+  if (typeof value === "object") return richTextToPlainText(value);
   return String(value).trim();
 };
 
@@ -28,7 +31,7 @@ export function formatAnamneseResumo(data) {
     });
 
     if (sectionLines.length) {
-      lines.push(`${section?.title || "Seção"}:`);
+      lines.push(`${section?.title || "Secao"}:`);
       lines.push(...sectionLines);
     }
   });
@@ -44,6 +47,7 @@ export function formatAnamneseResumo(data) {
 export function formatEvaluationResumo(result) {
   if (!result) return "-";
   if (typeof result === "string") return result;
+  if (result.type === "doc") return richTextToPlainText(result) || "-";
   if (result.value) return String(result.value);
 
   const parts = Object.entries(result)

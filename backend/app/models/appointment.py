@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime, time
 
 from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String, Time
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -22,7 +22,7 @@ class Appointment(Base):
     is_confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     scheduled_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="scheduled", nullable=False)
-    notes: Mapped[str | None] = mapped_column(String(500))
+    notes: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     confirmed_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     updated_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
