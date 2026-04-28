@@ -23,13 +23,17 @@ export const useAuthStore = defineStore("auth", {
       role: payload?.role || "",
       userId: payload?.sub || "",
       clinicId: payload?.clinic_id || "",
-      user: persistedUser
+      user: persistedUser,
+      firstLogin: persistedUser?.first_login ?? false,
+      hasSeenTutorial: persistedUser?.has_seen_tutorial ?? true
     };
   },
   actions: {
     async login(email, password, role) {
       const { data } = await api.post("/auth/login", { email, password, role });
       this.token = data.access_token;
+      this.firstLogin = Boolean(data.first_login);
+      this.hasSeenTutorial = Boolean(data.has_seen_tutorial);
       localStorage.setItem("token", this.token);
       const payload = parseJwt(this.token) || {};
       this.role = payload.role || "";
@@ -42,10 +46,28 @@ export const useAuthStore = defineStore("auth", {
       try {
         const { data } = await api.get("/users/me");
         this.user = data;
+        this.firstLogin = Boolean(data.first_login);
+        this.hasSeenTutorial = Boolean(data.has_seen_tutorial);
         localStorage.setItem("auth_user", JSON.stringify(data));
       } catch {
         this.user = null;
+        this.firstLogin = false;
+        this.hasSeenTutorial = true;
         localStorage.removeItem("auth_user");
+      }
+    },
+    setFirstLoginResolved() {
+      this.firstLogin = false;
+      if (this.user) {
+        this.user = { ...this.user, first_login: false };
+        localStorage.setItem("auth_user", JSON.stringify(this.user));
+      }
+    },
+    setTutorialSeen() {
+      this.hasSeenTutorial = true;
+      if (this.user) {
+        this.user = { ...this.user, has_seen_tutorial: true };
+        localStorage.setItem("auth_user", JSON.stringify(this.user));
       }
     },
     logout() {
@@ -54,6 +76,8 @@ export const useAuthStore = defineStore("auth", {
       this.userId = "";
       this.clinicId = "";
       this.user = null;
+      this.firstLogin = false;
+      this.hasSeenTutorial = true;
       localStorage.removeItem("token");
       localStorage.removeItem("auth_user");
     }
