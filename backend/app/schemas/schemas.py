@@ -41,6 +41,8 @@ class UserOut(UserBase):
     phone: str | None = None
     specialty: str | None = None
     email_is_confirmed: bool = False
+    first_login: bool = True
+    has_seen_tutorial: bool = False
     patient_id: uuid.UUID | None = None
     guardian_id: uuid.UUID | None = None
     created_at: datetime.datetime
@@ -326,6 +328,8 @@ class EvolutionsPage(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    first_login: bool = False
+    has_seen_tutorial: bool = False
 
 
 class TokenPayload(BaseModel):
@@ -338,6 +342,27 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
     role: str | None = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class GenericMessageOut(BaseModel):
+    message: str
+
+
+class ResetTokenValidationOut(BaseModel):
+    valid: bool
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
+class ChangePasswordRequest(BaseModel):
+    new_password: str = Field(min_length=8)
 
 
 class GuardianUpdate(BaseModel):

@@ -8,9 +8,13 @@ def test_login_success(client, monkeypatch):
         id = uuid.uuid4()
         clinic_id = uuid.uuid4()
         role = "admin"
+        first_login = True
+        has_seen_tutorial = False
 
     monkeypatch.setattr(auth_route, "authenticate", lambda db, email, password: DummyUser())
     response = client.post("/api/auth/login", json={"email": "a@b.com", "password": "12345678"})
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
+    assert data["first_login"] is True
+    assert data["has_seen_tutorial"] is False

@@ -28,6 +28,8 @@ def create_user(
     patient_id=None,
     guardian_id=None,
     email_is_confirmed: bool = False,
+    first_login: bool = True,
+    has_seen_tutorial: bool = False,
 ):
     existing = db.query(User).filter(User.email == email).first()
     if existing:
@@ -41,6 +43,8 @@ def create_user(
         role=role,
         clinic_id=clinic_id,
         email_is_confirmed=email_is_confirmed,
+        first_login=first_login,
+        has_seen_tutorial=has_seen_tutorial,
         patient_id=patient_id,
         guardian_id=guardian_id,
     )
@@ -133,6 +137,16 @@ def soft_delete_therapist(db: Session, *, clinic_id, therapist_id) -> None:
 
     therapist.deleted_at = datetime.utcnow()
     db.commit()
+
+
+def change_password(db: Session, *, user: User, new_password: str) -> User:
+    user.password_hash = get_password_hash(new_password)
+    user.first_login = False
+    user.reset_token_hash = None
+    user.reset_token_expiration = None
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 def ensure_linked_user(

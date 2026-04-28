@@ -3,6 +3,9 @@
 import { useAuthStore } from "../store/auth";
 
 import LoginView from "../views/LoginView.vue";
+import ForgotPasswordView from "../views/ForgotPasswordView.vue";
+import ResetPasswordView from "../views/ResetPasswordView.vue";
+import ChangePasswordView from "../views/ChangePasswordView.vue";
 import ConfirmEmailView from "../views/ConfirmEmailView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import PatientsView from "../views/PatientsView.vue";
@@ -26,7 +29,10 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: "/login", component: LoginView },
+    { path: "/forgot-password", component: ForgotPasswordView },
+    { path: "/reset-password", component: ResetPasswordView },
     { path: "/confirm-email", component: ConfirmEmailView },
+    { path: "/change-password", component: ChangePasswordView, meta: { requiresAuth: true, roles: ["admin", "therapist", "receptionist", "patient", "guardian"] } },
     { path: "/payment/success", name: "PaymentSuccess", component: PaymentSuccess },
     { path: "/payment/pending", name: "PaymentPending", component: PaymentPending },
     { path: "/payment/failure", name: "PaymentFailure", component: PaymentFailure },

@@ -20,6 +20,12 @@
                   <v-text-field v-model="email" label="Email" type="email" required />
                   <v-text-field v-model="password" label="Senha" type="password" required />
 
+                  <div class="d-flex justify-end mb-4">
+                    <v-btn variant="text" size="small" to="/forgot-password">
+                      Esqueci minha senha
+                    </v-btn>
+                  </div>
+
                   <v-btn color="primary" :loading="loading" type="submit" block>
                     <v-icon icon="fa-solid fa-right-to-bracket" />
                     Entrar
