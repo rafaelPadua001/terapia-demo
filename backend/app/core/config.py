@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
     frontend_url: str = Field(default="http://localhost:5173", alias="FRONTEND_URL")
+    tenant_base_domain: str | None = Field(default=None, alias="TENANT_BASE_DOMAIN")
+    tenant_enforce_subdomain: bool = Field(default=False, alias="TENANT_ENFORCE_SUBDOMAIN")
     clinic_email: str | None = Field(default=None, alias="CLINIC_EMAIL")
     clinic_email_password: str | None = Field(default=None, alias="CLINIC_EMAIL_PASSWORD")
     smtp_host: str | None = Field(default="smtp.gmail.com", alias="SMTP_HOST")

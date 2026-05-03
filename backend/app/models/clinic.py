@@ -13,6 +13,8 @@ class Clinic(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    subdomain: Mapped[str | None] = mapped_column(String(120), nullable=True, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     users = relationship("User", back_populates="clinic")

@@ -5,10 +5,13 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes import api_router
 from app.core.config import settings
+from app.core.database import SessionLocal
+from app.services.tenant_service import extract_subdomain, get_clinic_by_subdomain, get_default_clinic
 import os
 
 port = int(os.getenv("PORT", 8000))
@@ -18,6 +21,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("app")
 
 app = FastAPI(title=settings.app_name)
+
+allowed_hosts = [
+    "localhost",
+    "127.0.0.1",
+    "localhost.tiangolo.com",
+    "*.localhost.tiangolo.com",
+]
+tenant_base_domain = (settings.tenant_base_domain or "").strip().lower()
+if tenant_base_domain:
+    allowed_hosts.append(f"*.{tenant_base_domain}")
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=allowed_hosts,
+)
 
 origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
 
@@ -32,6 +50,23 @@ app.add_middleware(
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    request.state.tenant_subdomain = None
+    request.state.tenant_clinic = None
+    request.state.clinic = None
+    subdomain = extract_subdomain(request.headers.get("host"))
+    request.state.tenant_subdomain = subdomain
+    db = SessionLocal()
+    try:
+        clinic = get_clinic_by_subdomain(db, subdomain) if subdomain else None
+        if not clinic:
+            clinic = get_default_clinic(db) if not settings.tenant_enforce_subdomain else None
+        if not clinic and settings.tenant_enforce_subdomain:
+            return JSONResponse(status_code=404, content={"error": "Clinica nao encontrada", "code": "TENANT_NOT_FOUND"})
+        request.state.tenant_clinic = clinic
+        request.state.clinic = clinic
+    finally:
+        db.close()
+
     start = time.time()
     response = await call_next(request)
     duration = (time.time() - start) * 1000

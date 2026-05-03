@@ -43,15 +43,21 @@ def create_therapist_route(
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    return create_therapist(
-        db,
-        clinic_id=user.clinic_id,
-        name=payload.name,
-        email=payload.email,
-        phone=payload.phone,
-        specialty=payload.specialty,
-        password=payload.password,
-    )
+    try:
+        return create_therapist(
+            db,
+            clinic_id=user.clinic_id,
+            name=payload.name,
+            email=payload.email,
+            cpf=payload.cpf,
+            phone=payload.phone,
+            specialty=payload.specialty,
+            registration_type=payload.registration_type,
+            professional_registration=payload.professional_registration,
+            password=payload.password,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @router.put("/therapists/{therapist_id}", response_model=TherapistOut, dependencies=[Depends(require_role("admin"))])
@@ -64,7 +70,8 @@ def update_therapist_route(
     try:
         return update_therapist(db, clinic_id=user.clinic_id, therapist_id=therapist_id, payload=payload)
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        status_code = 404 if str(exc) == "Therapist not found" else 400
+        raise HTTPException(status_code=status_code, detail=str(exc))
 
 
 @router.delete(

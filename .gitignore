@@ -127,3 +127,11 @@ Thumbs.db
 !README.md
 !docs/
 !docs/MANUAL_USUARIO.md
+
+# ===============================
+# Codex / Plugins / AI tooling
+# ===============================
+
+.agents/
+.codex/
+plugins/

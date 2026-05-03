@@ -9,7 +9,16 @@
       :permanent="!isCompact"
       :location="isCompact ? 'left' : undefined"
     >
-      <div class="text-h6 section-title mb-2">Clinics SaaS</div>
+      <div class="d-flex align-center ga-2 mb-2">
+        <img
+          v-if="showLogo"
+          :src="clinic.logoUrl"
+          alt="Logo da clinica"
+          class="app-brand-logo"
+          @error="onLogoError"
+        />
+        <h2 v-else class="app-brand-name">{{ safeClinicName }}</h2>
+      </div>
       <div class="text-body-2 mb-4" style="color: #5e7c78;">Painel da clinica</div>
       <v-divider class="mb-3" />
       <v-list density="compact" nav>
@@ -28,8 +37,8 @@
               :class="[
                 'menu-item',
                 {
-                'tutorial-target': currentTutorialTarget === item.id,
-                'active-menu': isMenuItemActive(item.to),
+                  'tutorial-target': currentTutorialTarget === item.id,
+                  'active-menu': isActive(item),
                 },
               ]"
               @click="onMenuItemClick"
@@ -128,22 +137,36 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 import { useRoute, useRouter } from "vue-router";
 import OnboardingDialog from "../components/OnboardingDialog.vue";
+import { useActiveMenu } from "../composables/useActiveMenu";
 import { completeTutorial } from "../services/authService";
 import { getMyTransactions } from "../services/financialService";
 import { getNotifications, markNotificationAsRead } from "../services/notificationService";
 import { useAuthStore } from "../store/auth";
+import { useClinicStore } from "../store/clinic";
 
 const auth = useAuthStore();
+const clinic = useClinicStore();
 const router = useRouter();
 const route = useRoute();
+const { isActive } = useActiveMenu();
 const { mdAndDown, smAndDown } = useDisplay();
 const notifications = ref([]);
 const pendingCharges = ref(0);
 const tutorialIndex = ref(0);
 const tutorialOpened = ref(false);
+const logoFailed = ref(false);
 const storedDrawer = typeof window !== "undefined" ? window.localStorage.getItem("drawer") : null;
 const drawer = ref(storedDrawer !== null ? storedDrawer === "true" : !mdAndDown.value);
 const isCompact = computed(() => mdAndDown.value || smAndDown.value);
+const showLogo = computed(() => !!clinic.logoUrl && !logoFailed.value);
+const safeClinicName = computed(() => {
+  if (!clinic.name) return "Minha Clinica";
+  try {
+    return decodeURIComponent(escape(clinic.name));
+  } catch {
+    return clinic.name;
+  }
+});
 let pollingId = null;
 let chargesPollingId = null;
 
@@ -166,13 +189,13 @@ const menuItems = computed(() => {
   if (role === "therapist" || role === "admin") {
     const items = [
       { id: "menu-dashboard", title: "Dashboard", to: "/", tooltip: "Visao geral da clinica" },
-      { id: "menu-patients", title: "Pacientes", to: "/patients", tooltip: "Gerenciar pacientes cadastrados" },
+      { id: "menu-patients", title: "Pacientes", to: "/patients", tooltip: "Gerenciar pacientes cadastrados", matchChildren: true },
       { id: "menu-anamneses", title: "Anamneses", to: "/anamneses", tooltip: "Registrar dados clinicos iniciais" },
       { id: "menu-evaluations", title: "Avaliacoes", to: "/evaluations", tooltip: "Acompanhar avaliacoes clinicas" },
       { id: "menu-validations", title: "Validacoes", to: "/validations", tooltip: "Revisar validacoes pendentes" },
       { id: "menu-evolutions", title: "Evolucoes", to: "/evolutions", tooltip: "Consultar evolucoes registradas" },
       { id: "menu-appointments", title: "Agendamentos", to: "/appointments", tooltip: "Visualizar e organizar atendimentos" },
-      { id: "menu-financial", title: "Financeiro", to: "/financial/dashboard", tooltip: "Controle de pagamentos e faturamento" },
+      { id: "menu-financial", title: "Financeiro", to: "/financial/dashboard", tooltip: "Controle de pagamentos e faturamento", matchChildren: true, matchBase: "/financial" },
     ];
     if (role === "admin") {
       items.splice(2, 0, { id: "menu-therapists", title: "Terapeutas", to: "/therapists", tooltip: "Gerenciar profissionais cadastrados" });
@@ -182,11 +205,11 @@ const menuItems = computed(() => {
   if (role === "receptionist") {
     return [
       { id: "menu-dashboard", title: "Dashboard", to: "/", tooltip: "Visao geral da clinica" },
-      { id: "menu-patients", title: "Pacientes", to: "/patients", tooltip: "Gerenciar pacientes cadastrados" },
+      { id: "menu-patients", title: "Pacientes", to: "/patients", tooltip: "Gerenciar pacientes cadastrados", matchChildren: true },
       { id: "menu-evaluations", title: "Avaliacoes", to: "/evaluations", tooltip: "Acompanhar avaliacoes clinicas" },
       { id: "menu-evolutions", title: "Evolucoes", to: "/evolutions", tooltip: "Consultar evolucoes registradas" },
       { id: "menu-appointments", title: "Agendamentos", to: "/appointments", tooltip: "Visualizar e organizar atendimentos" },
-      { id: "menu-financial", title: "Financeiro", to: "/financial/dashboard", tooltip: "Controle de pagamentos e faturamento" },
+      { id: "menu-financial", title: "Financeiro", to: "/financial/dashboard", tooltip: "Controle de pagamentos e faturamento", matchChildren: true, matchBase: "/financial" },
     ];
   }
   if (role === "patient" || role === "guardian") {
@@ -252,6 +275,10 @@ const loadPendingCharges = async () => {
   }
 };
 
+const onLogoError = () => {
+  logoFailed.value = true;
+};
+
 const openNotification = async (notification) => {
   if (!notification || notification.is_read) return;
   try {
@@ -260,8 +287,6 @@ const openNotification = async (notification) => {
   } catch {
   }
 };
-
-const isMenuItemActive = (path) => route.path === path;
 
 const onMenuItemClick = () => {
   if (isCompact.value) {
@@ -333,6 +358,13 @@ watch(drawer, (val) => {
   }
 });
 
+watch(
+  () => clinic.logoUrl,
+  () => {
+    logoFailed.value = false;
+  },
+);
+
 onBeforeUnmount(() => {
   if (pollingId) {
     clearInterval(pollingId);
@@ -370,5 +402,19 @@ onBeforeUnmount(() => {
   border-left: 4px solid #4caf50;
   background: rgba(76, 175, 80, 0.12);
   color: #1f3a32 !important;
+  font-weight: 500;
+}
+
+.app-brand-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.app-brand-name {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.2;
 }
 </style>

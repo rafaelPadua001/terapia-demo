@@ -9,6 +9,8 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 class ClinicBase(BaseModel):
     name: str
+    logo_url: str | None = None
+    subdomain: str | None = None
 
 
 class ClinicCreate(ClinicBase):
@@ -20,6 +22,12 @@ class ClinicOut(ClinicBase):
 
     id: uuid.UUID
     created_at: datetime.datetime
+
+
+class ClinicBrandingOut(BaseModel):
+    name: str
+    logo_url: str | None = None
+    subdomain: str | None = None
 
 
 class UserBase(BaseModel):
@@ -40,6 +48,9 @@ class UserOut(UserBase):
     clinic_id: uuid.UUID
     phone: str | None = None
     specialty: str | None = None
+    cpf: str | None = None
+    registration_type: str | None = None
+    professional_registration: str | None = None
     email_is_confirmed: bool = False
     first_login: bool = True
     has_seen_tutorial: bool = False
@@ -52,8 +63,11 @@ class UserOut(UserBase):
 class TherapistCreate(BaseModel):
     name: str
     email: EmailStr
+    cpf: str
     phone: str | None = None
     specialty: str | None = None
+    registration_type: str | None = None
+    professional_registration: str | None = None
     password: str | None = None
 
 
@@ -66,6 +80,9 @@ class TherapistOut(BaseModel):
     email: EmailStr
     phone: str | None = None
     specialty: str | None = None
+    cpf: str | None = None
+    registration_type: str | None = None
+    professional_registration: str | None = None
     role: str
     created_at: datetime.datetime
 
@@ -73,8 +90,11 @@ class TherapistOut(BaseModel):
 class TherapistUpdate(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
+    cpf: str | None = None
     phone: str | None = None
     specialty: str | None = None
+    registration_type: str | None = None
+    professional_registration: str | None = None
     password: str | None = None
 
 

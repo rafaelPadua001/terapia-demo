@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
@@ -21,6 +21,7 @@ def normalize_role(role: str | None) -> str:
 
 
 def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
@@ -36,6 +37,9 @@ def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     if str(user.clinic_id) != str(token_data.clinic_id):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid clinic")
+    tenant_clinic = getattr(request.state, "clinic", None) or getattr(request.state, "tenant_clinic", None)
+    if tenant_clinic and str(tenant_clinic.id) != str(user.clinic_id):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid tenant context")
 
     user.role = normalize_role(user.role)
     return user
