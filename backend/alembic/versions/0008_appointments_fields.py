@@ -1,7 +1,7 @@
 """appointments fields
 
 Revision ID: 0008_appointments_fields
-Revises: 0007_rbac_users_guardian_patients
+Revises: 0007_rbac_users_guardians
 Create Date: 2026-03-18
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "0008_appointments_fields"
-down_revision = "0007_rbac_users_guardian_patients"
+down_revision = "0007_rbac_users_guardians"
 branch_labels = None
 depends_on = None
 

@@ -1,6 +1,6 @@
 """rbac users and guardian patients
 
-Revision ID: 0007_rbac_users_guardian_patients
+Revision ID: 0007_rbac_users_guardians
 Revises: 0006_guardian_relationship_type
 Create Date: 2026-03-18
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "0007_rbac_users_guardian_patients"
+revision = "0007_rbac_users_guardians"
 down_revision = "0006_guardian_relationship_type"
 branch_labels = None
 depends_on = None

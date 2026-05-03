@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/login", response_model=Token)
-def login(data: LoginRequest, db: Session = Depends(get_db)):
+def login(data: LoginRequest, request: Request, db: Session = Depends(get_db)):
     password_bytes = len(data.password.encode("utf-8"))
     logger.info("AUTH LOGIN password_bytes=%s", password_bytes)
     if password_bytes > BCRYPT_MAX_PASSWORD_BYTES:
@@ -48,6 +48,9 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     if data.role and user.role != data.role:
         raise HTTPException(status_code=403, detail="Invalid role")
+    tenant_clinic = getattr(request.state, "tenant_clinic", None)
+    if tenant_clinic and str(tenant_clinic.id) != str(user.clinic_id):
+        raise HTTPException(status_code=403, detail="Invalid tenant for user")
 
     access_token = create_access_token(subject=str(user.id), clinic_id=str(user.clinic_id), role=user.role)
     return Token(

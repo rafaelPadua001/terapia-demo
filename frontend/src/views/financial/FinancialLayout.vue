@@ -12,19 +12,42 @@
                 to="/financial/dashboard"
                 title="Dashboard"
                 prepend-icon="fa-solid fa-chart-line"
-                :class="['menu-item', { 'active-menu': isActive('/financial/dashboard') }]"
+                :class="[
+                  'menu-item',
+                  {
+                    'active-menu': isActive({
+                      to: '/financial/dashboard',
+                      matchChildren: true
+                    })
+                  }
+                ]"
               />
               <v-list-item
                 to="/financial"
                 title="Transações"
                 prepend-icon="fa-solid fa-dollar-sign"
-                :class="['menu-item', { 'active-menu': isActive('/financial') }]"
+                :class="[
+                  'menu-item',
+                  {
+                    'active-menu': isActive({
+                      to: '/financial'
+                    })
+                  }
+                ]"
               />
               <v-list-item
                 to="/financial/accounts"
                 title="Contas"
                 prepend-icon="fa-solid fa-building-columns"
-                :class="['menu-item', { 'active-menu': isActive('/financial/accounts') }]"
+                :class="[
+                  'menu-item',
+                  {
+                    'active-menu': isActive({
+                      to: '/financial/accounts',
+                      matchChildren: true
+                    })
+                  }
+                ]"
               />
             </v-list>
           </div>
@@ -59,13 +82,12 @@
 
 <script setup>
 import { useDisplay } from "vuetify";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
+import { useActiveMenu } from "../../composables/useActiveMenu";
 
 const router = useRouter();
-const route = useRoute();
+const { isActive } = useActiveMenu();
 const { mdAndDown } = useDisplay();
-
-const isActive = (path) => route.path === path;
 </script>
 
 <style scoped>
@@ -93,6 +115,7 @@ const isActive = (path) => route.path === path;
   border-left: 4px solid #4caf50;
   background-color: rgba(76, 175, 80, 0.1);
   color: inherit;
+  font-weight: 500;
 }
 
 @media (max-width: 960px) {

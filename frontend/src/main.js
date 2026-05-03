@@ -22,6 +22,7 @@ import App from "./App.vue";
 import router from "./router";
 import "./ui/theme.css";
 import { useAuthStore } from "./store/auth";
+import { useClinicStore } from "./store/clinic";
 
 
 
@@ -171,11 +172,18 @@ app.use(router);
 app.use(vuetify);
 
 const auth = useAuthStore(pinia);
-if (auth.token && !auth.user) {
-  auth.loadCurrentUser().catch(() => {});
-}
+const clinic = useClinicStore(pinia);
+const bootstrap = async () => {
+  await clinic.loadClinic().catch(() => {});
+  if (auth.token && !auth.user) {
+    await auth.loadCurrentUser().catch(() => {});
+  }
+  app.mount("#app");
+};
 
-app.mount("#app");
+bootstrap().catch(() => {
+  app.mount("#app");
+});
 
 
 
