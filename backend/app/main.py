@@ -27,6 +27,9 @@ allowed_hosts = [
     "127.0.0.1",
     "localhost.tiangolo.com",
     "*.localhost.tiangolo.com",
+    "terapia-demo.onrender.com",
+    "terapia-demo-1.onrender.com",
+    "*.onrender.com",
 ]
 tenant_base_domain = (settings.tenant_base_domain or "").strip().lower()
 if tenant_base_domain:
@@ -37,7 +40,7 @@ app.add_middleware(
     allowed_hosts=allowed_hosts,
 )
 
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,https://terapia-demo.onrender.com,https://terapia-demo-1.onrender.com").split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,
